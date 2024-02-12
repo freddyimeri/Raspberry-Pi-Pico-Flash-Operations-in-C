@@ -17,25 +17,18 @@
 // - data_len: Length of the data to be written.
 //
 // Note: This function erases the flash sector before writing new data.
+
 void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len) {
  
+    uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
 
- 
+    uint32_t ints = save_and_disable_interrupts();
 
+    flash_range_erase(flash_offset, FLASH_SECTOR_SIZE);
 
-uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+    flash_range_program(flash_offset, data, data_len);
 
-
-uint32_t ints = save_and_disable_interrupts();
-
-flash_range_erase(flash_offset, FLASH_SECTOR_SIZE);
-
-
-flash_range_program(flash_offset, data, data_len);
-
-restore_interrupts(ints);
-
-
+    restore_interrupts(ints);
 
 }
 
@@ -48,28 +41,28 @@ restore_interrupts(ints);
 // - buffer_len: Number of bytes to read.
 //
 // Note: The function performs bounds checking to ensure safe access.
+
 void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len) {
 
 uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
-
 memcpy(buffer, (const void *)(XIP_BASE + flash_offset), buffer_len);
 
 } 
+
 void flash_erase_safe(uint32_t offset) {
-
-	uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
-	uint32_t ints = save_and_disable_interrupts();
-	uint32_t sector_start = flash_offset & ~(FLASH_SECTOR_SIZE - 1);
-	if (sector_start < FLASH_TARGET_OFFSET + FLASH_SIZE) {
-		flash_range_erase(sector_start, FLASH_SECTOR_SIZE);
-	} else {
-        	printf("Error: Sector start address is out of bounds.\n");
-        	// Restore interrupts before returning due to error
-        	restore_interrupts(ints);
-        	return;
-    	}
-
-    // Restore Interrupts
+    uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+    uint32_t ints = save_and_disable_interrupts();
+    uint32_t sector_start = flash_offset & ~(FLASH_SECTOR_SIZE - 1);
+    if (sector_start < FLASH_TARGET_OFFSET + FLASH_SIZE) {
+    	flash_range_erase(sector_start, FLASH_SECTOR_SIZE);
+    } 
+    else 
+    {
+        printf("Error: Sector start address is out of bounds.\n");
+        // Restore interrupts before returning due to error
+        restore_interrupts(ints);
+        return;
+    }
     restore_interrupts(ints);
 }
 
