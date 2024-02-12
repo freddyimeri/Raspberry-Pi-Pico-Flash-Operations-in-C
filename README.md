@@ -1,5 +1,10 @@
 # Worksheet 1 
+## Program Architecture
+The program contains the following files
 
+| file name    | Porpuse                                      |
+|--------------|----------------------------------------------|
+| flash_ops.c  | main functions for running terminal commands |
 
 ## Bulding the program
 
@@ -99,16 +104,80 @@ results......
 <br><br>
  
 
-## code in the 
+## APPENDIX
 
+### Full code explenation for FLASH_WRITE 
 
+The `flash_write` function contains various components for writing on the flash memory.
+<br> The following code, contains the FLASH_WRITE function:
 
+```c
+void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len) {
+uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+uint32_t ints = save_and_disable_interrupts();
+flash_range_erase(flash_offset, FLASH_SECTOR_SIZE);
+flash_range_program(flash_offset, data, data_len);
+restore_interrupts(ints);
+}
+```
+Now will break down what each line does<br>
+By looking on the first line:
 
+```c
+void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len)
+```
+This file has 3 parameters and are:
 
+| Name            | Porpuse |
+|-----------------|---------|
+| uint32_t offset | blabla  |
 
+<br>
+The following line of code is 
 
+```c
 
+uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
 
+```
+The code does: blabla
+
+<br>
+"mising code for task for checking"
+<br>
+
+After the checking, the next step is to blabl this wil be achieved by this:
+
+```c
+uint32_t ints = save_and_disable_interrupts();
+```
+
+<br>
+
+Interupts are stopped, giving apportiounity for :
+
+``` c
+flash_range_erase(flash_offset, FLASH_SECTOR_SIZE);
+``` 
+where this and this will happen 
+
+<br>
+after that one happens this willl happen 
+
+```c
+flash_range_program(flash_offset, data, data_len);
+
+```
+
+blablabla 
+
+<br>
+
+Final line of code is responsible for reseting the interupts function,
+```c
+restore_interrupts(ints);
+
+```
 
 
 
