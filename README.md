@@ -104,7 +104,7 @@ results......
 <br><br>
  
 
-## APPENDIX
+## APPENDIX A
 
 ### Full code explenation for FLASH_WRITE 
 
@@ -179,6 +179,79 @@ restore_interrupts(ints);
 
 ```
 
+### Full code explenation for FLASH_READ
+
+The `flash_read_safe` function contains various components for reading on the flash memory.
+<br> The following code, contains the FLASH_READ
+
+```c
+void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len) {
+uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+memcpy(buffer, (const void *)(XIP_BASE + flash_offset), buffer_len);
+} 
+```
+The first line it does this:
+blablabla
+
+<br>
+
+As done in FLASH_WRITE, calcualting the.., here needs to do that because
+
+```c
+uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+
+```
+
+After that only thing is left is to ..., and is done by the following line of code:
+```c
+memcpy(buffer, (const void *)(XIP_BASE + flash_offset), buffer_len);
+```
+### Full code explenation for FLASH_ERASE
+This function is responsible for ....
+And the code is :
+
+```c
+
+void flash_erase_safe(uint32_t offset) {
+
+	uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+	uint32_t ints = save_and_disable_interrupts();
+	uint32_t sector_start = flash_offset & ~(FLASH_SECTOR_SIZE - 1);
+	if (sector_start < FLASH_TARGET_OFFSET + FLASH_SIZE) {
+		flash_range_erase(sector_start, FLASH_SECTOR_SIZE);
+	} else {
+        	printf("Error: Sector start address is out of bounds.\n");
+        	// Restore interrupts before returning due to error
+        	restore_interrupts(ints);
+        	return;
+    	}
+    restore_interrupts(ints);
+}
+```
+This code has many similiarietes to the FLASH_WRITE because blabla
+the first line is :
+```c
+void flash_erase_safe(uint32_t offset) 
+```
+
+Where the user has to choose the block of which needs to be erased 
+the thing that is different from FLASH_READ is that
+
+```c
+
+if (sector_start < FLASH_TARGET_OFFSET + FLASH_SIZE) {
+		flash_range_erase(sector_start, FLASH_SECTOR_SIZE);
+	} else {
+        	printf("Error: Sector start address is out of bounds.\n");
+        	// Restore interrupts before returning due to error
+        	restore_interrupts(ints);
+        	return;
+    	}
+
+```
+
+
+## APPENDIX B
 
 
 
