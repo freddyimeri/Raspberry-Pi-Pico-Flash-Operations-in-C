@@ -1,42 +1,103 @@
-# CAP Worksheet 1 Template
+# Worksheet 1 
 
-## Command lines instructions
 
-### Bulding the code
-inside in <B>cap_template/build</B> Run cmake ..
-for Bulding the <B>cap_template</B> folder inside in build directory<br>
+## Bulding the program
 
-After the code is executed run <B>make</B> Command<br>
+By following the following commands lines, can complile the program.
+```bash
+cd cap_template/build
+cmake ..
+make
+```
+ 
+## Execution of the program
+In the `cap_template/build` will contain a file called `cap_template.uf2` where 
+this file needs to be movied inside in the folder of the motherboard.
 
-#### run the code in the motherboard
-in the <B>cap_template/build</B> will be a file called cap_template.uf2, where <br>
-this file needs to be coppied inside in the folder of the motherboard.
-
-### Run the motherboard
+## Run the motherboard
 When the motherboard is connected we need to open an terminal and type:
+
+``` bash
 sudo dmesg | tail
 sudo screen /dev/ttyACM0 115200
+```
 
-<br>
-from there you can test the application by running this commands
-<br>FLASH_WRITE 0 “Hello World”<br>
-<br>FLASH_READ 0 100<br>
-<br>FLASH_ERASE 0<br>
+## Task  1
+For Task 1, have been implement 3 functions called 
+- flash_write_safe
+- flash_read_safe
+- flash_erase_safe
 
-#### commands explenation 
-FLASH_WRITE 0 “Hello World”<br>
-FLASH_WRITE will take 2 parameters, the first parameter is the location where the
-data is going to be saved in the flash memory, and the second parameter is what is going to be saved, 
-in that instance it will be "hello World”, that is an string format.
-<br><br>
+They are responsible for data manipulation on the physical motherboard. Those 3 function can write, read and delete data from the motherboard. 
 
-FLASH_READ 0 100, this commands it will read anything from the location 0, and the seccond parameter that is 100 it will read the 
+### flash_write_safe function
+The function:
+```c
+void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len)
+```
+Command line:
+```bash
+FLASH_WRITE 0 “Hello World"
+```
+
+`FLASH_WRITE` will take 2 parameters, the first parameter is the location where the
+data is going to be saved in the flash memory, and the second parameter is te data that is going to be saved, 
+in that instance it will be `"hello World”` on the location block `0`
+
+
+### Function: flash_read_safe 
+The function:
+```c
+void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len)
+```
+Command line:
+
+```bash
+FLASH_READ 0 100
+```
+The command it will read anything from the location 0, and the seccond parameter that is 100, will read the 
 100 bites on that location
 
-<br><br>
+### Function: flash_erase_safe 
+The function:
+```c
+void flash_erase_safe(uint32_t offset) 
+```
+Command line:
+```bash
+FLASH_ERASE 0
+```
+This is responsible for deleting the memory block of location 0, in that case it will erase the string 
+data and fill it up back with 0's
 
-FLASH_ERASE 0, this is responsible for deleting the memory block of location 0, in that case it will erase the string 
-data and fill it up back with 0's 
+
+
+
+
+
+
+
+
+
+### Testing
+
+We can test the program by typing on the
+terminal the following code, after you completed this step "link to run the motherboard"
+
+```c
+FLASH_WRITE 0 “Hello World”
+FLASH_READ 0 100
+FLASH_ERASE 0
+results......
+```
+
+
+
+
+
+
+<br><br>
+ 
 
 ## code in the 
 
