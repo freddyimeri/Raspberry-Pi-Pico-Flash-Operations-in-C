@@ -22,6 +22,12 @@ void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len) {
  
     uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
 
+     // Bounds checking
+    if (flash_offset + data_len > FLASH_TARGET_OFFSET + FLASH_SIZE) {
+        printf("Error: Attempt to write beyond flash memory limits.\n");
+        return; // Exit if the operation is out of bounds
+    }
+    
     uint32_t ints = save_and_disable_interrupts();
 
     flash_range_erase(flash_offset, FLASH_SECTOR_SIZE);
@@ -45,6 +51,14 @@ void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len) {
 void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len) {
 
 uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+
+// Bounds checking
+
+ if (flash_offset + buffer_len > FLASH_TARGET_OFFSET + FLASH_SIZE) {
+        printf("Error: Attempt to read beyond flash memory limits.\n");
+        return; // Exit if the operation is out of bounds
+    }
+
 memcpy(buffer, (const void *)(XIP_BASE + flash_offset), buffer_len);
 
 } 
