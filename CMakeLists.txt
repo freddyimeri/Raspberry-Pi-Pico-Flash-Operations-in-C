@@ -14,6 +14,7 @@ add_executable(cap_template
   custom_fgets.c
   flash_ops.c
   cli.c
+  test.c
 )
 
 pico_enable_stdio_usb(cap_template 1)

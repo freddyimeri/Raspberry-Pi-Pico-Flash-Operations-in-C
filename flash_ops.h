@@ -4,11 +4,13 @@
 #include <stdint.h>
 #include <stddef.h>
 
- 
+ #include <stdbool.h>  // Include this header for bool type
 typedef struct {
+    bool valid; 
     uint32_t write_count;
     size_t data_len;
-    uint8_t *data_ptr;
+    const uint8_t *data_ptr;
+   
 } flash_data;
 
 
@@ -22,7 +24,8 @@ void flash_write_safe_struct(uint32_t offset, flash_data *data);
 void flash_read_safe_struct(uint32_t offset, flash_data *data);
 
 
- 
+void print_flash_data_write_count(uint32_t offset);
+
 #endif // FLASH_OPS_H
 
 
