@@ -1,3 +1,22 @@
+/**
+ * @file flash_ops.c
+ * 
+ * This module provides a set of functions to perform safe read, write, and erase operations 
+ * on the flash memory of a Raspberry Pi Pico. It ensures data integrity and alignment according 
+ * to the constraints of the hardware flash memory. Functions in this module handle:
+ * 
+ * - Alignment checks to ensure all operations respect flash sector boundaries.
+ * - Data size checks to prevent buffer overflows and ensure data fits within designated flash sectors.
+ * - Boundary checks to prevent operations from exceeding the physical memory limits.
+ * - Utilities to read and write structured data to and from the flash memory, maintaining a count 
+ *   of write operations to assist with wear leveling strategies if needed.
+ * 
+ * The functionality encapsulated in this module is critical for maintaining the durability and 
+ * reliability of the flash memory in embedded systems, particularly those requiring non-volatile 
+ * storage for state retention across power cycles.
+ */
+
+
 #include "flash_ops.h"
 #include <stdio.h>
 #include <string.h>
@@ -17,19 +36,27 @@ void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len) {
     uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
     printf("flash_offset: %d\n", flash_offset);
 
+    // Check if the data pointer is NULL or data length is zero
+     if (data == NULL || data_len == 0) {
+        printf("Error: No data provided or data length is zero.\n");
+        return;  // Early exit if no data to write or length is zero
+    }
+
      // Check if the offset is aligned with the sector size
     if (flash_offset % FLASH_SECTOR_SIZE != 0) {
-        printf("Invalid offset. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
+        printf("Error: Invalid offset for write. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
         return;
     }
 
      // Check if the data size exceeds the maximum allowed size in a sector minus metadata
     if (data_len > (FLASH_SECTOR_SIZE - METADATA_SIZE)) {
-        printf("Error: Data size exceeds the maximum allowed limit per sector.\n");
+        printf("Error: Data size exceeds the maximum allowed limit per sector (%u bytes allowed).\n", FLASH_SECTOR_SIZE - METADATA_SIZE);
         return;
     }
 
     // Ensure we don't exceed flash memory limits
+
+    // FLASH_TARGET_OFFSET + FLASH_SIZE is this correct???
     if (flash_offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
         printf("Error: Attempt to write beyond flash memory limits.\n");
         return;
@@ -82,9 +109,16 @@ void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len) {
     printf("flash_offset: %d\n", flash_offset);
      // Check if the offset is aligned with the sector size
     if (flash_offset % FLASH_SECTOR_SIZE != 0) {
-        printf("Invalid offset. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
+        printf("Error: Invalid offset for read. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
         return;
     }
+
+    // Ensure we don't exceed flash memory limits
+    if (flash_offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
+        printf("Error: Attempt to read beyond flash memory limits.\n");
+        return;
+    }
+
 
 
     flash_data flashData;
@@ -130,9 +164,16 @@ void flash_erase_safe(uint32_t offset) {
     printf("offset: %d\n", offset);
     uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
     printf("flash_offset: %d\n", flash_offset);
+
      // Check if the offset is aligned with the sector size
     if (flash_offset % FLASH_SECTOR_SIZE != 0) {
-        printf("Invalid offset. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
+        printf("Error: Invalid offset for erase. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
+        return;
+    }
+
+     // Ensure we don't exceed flash memory limits
+    if (flash_offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
+        printf("Error: Attempt to erase beyond flash memory limits.\n");
         return;
     }
 
@@ -168,4 +209,61 @@ void flash_erase_safe(uint32_t offset) {
     restore_interrupts(ints);
 }
 
-  
+
+uint32_t get_flash_write_count(uint32_t offset) {
+    printf("\nENTERED get_and_print_flash_write_count\n");
+    uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+
+
+
+    // Check if the offset is aligned with the sector size
+    if (flash_offset % FLASH_SECTOR_SIZE != 0) {
+        printf("Error: Invalid offset for getting the Write count. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
+        return 0;
+    }
+
+
+    // Bounds checking
+    if (flash_offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
+        printf("Error: Attempt to read for write count beyond flash memory limits.\n");
+        return 0; // Assuming 0 as an invalid write count or error indication
+    }
+
+    // Temporary structure to hold flash data
+    flash_data tempFlashData;
+
+    // Reading Data
+    memcpy(&tempFlashData, (const void *)(XIP_BASE + flash_offset), METADATA_SIZE);
+
+    return tempFlashData.write_count; // Return the write count
+}
+
+
+
+uint32_t get_flash_data_length(uint32_t offset) {
+    printf("\nENTERED get_flash_data_length\n");
+    uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+
+    // Check if the offset is aligned with the sector size
+    if (flash_offset % FLASH_SECTOR_SIZE != 0) {
+        printf("Error: Invalid offset for getting data length. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
+        return 0; // Return 0 as indication of error due to misalignment
+    }
+
+    // Bounds checking
+    if (flash_offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
+        printf("Error: Attempt to read for data length beyond flash memory limits.\n");
+        return 0; // Return 0 as indication of error due to out of bounds
+    }
+
+    // Temporary structure to hold flash data
+    flash_data tempFlashData;
+
+    // Reading Data
+    memcpy(&tempFlashData, (const void *)(XIP_BASE + flash_offset), METADATA_SIZE);
+
+    printf("FLASH DATA LENGTH: %zu\n", tempFlashData.data_len);
+
+    return tempFlashData.data_len; // Return the data length
+}
+

@@ -24,8 +24,8 @@ void flash_write_safe_struct(uint32_t offset, flash_data *data);
 void flash_read_safe_struct(uint32_t offset, flash_data *data);
 
 
-void print_flash_data_write_count(uint32_t offset);
-
+uint32_t get_flash_write_count(uint32_t offset);
+uint32_t get_flash_data_length(uint32_t offset);
 #endif // FLASH_OPS_H
 
 
