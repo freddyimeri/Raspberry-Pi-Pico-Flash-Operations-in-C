@@ -44,7 +44,6 @@ int main() {
     printf("\n\n\n\nPrinting data details...\n");
 
 
-    print_flash_data_write_count(offset);
 
     printf("Data details printed.\n");
 

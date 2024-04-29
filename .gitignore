@@ -1,1 +1,15 @@
-/build/
+
+/.vscode/
+/build/CMakeFiles/
+/build/elf2uf2/
+/build/pico-sdk/
+/build/pioasm/
+/build/generated/
+build/cap_template.bin
+build/cap_template.dis
+build/cap_template.elf.map
+build/cap_template.elf
+build/cap_template.hex
+build/cmake_install.cmake
+build/CMakeCache.txt
+build/Makefile
