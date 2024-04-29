@@ -1,67 +1,81 @@
 #include "flash_ops.h"
 #include <stdio.h>
 #include <string.h>
+ 
 #include "pico/stdlib.h"
 #include "hardware/flash.h"
 #include "hardware/sync.h"
+#include <stdlib.h>
 
 #define FLASH_TARGET_OFFSET (256 * 1024) // Offset where user data starts (256KB into flash)
 #define FLASH_SIZE PICO_FLASH_SIZE_BYTES // Total flash size available
 
-// Function: flash_write_safe
-// Writes data to flash memory at a specified offset, ensuring safety checks.
-//
-// Parameters:
-// - offset: The offset from FLASH_TARGET_OFFSET where data is to be written.
-// - data: Pointer to the data to be written.
-// - data_len: Length of the data to be written.
-//
-// Note: This function erases the flash sector before writing new data.
-
 void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len) {
- 
-    uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+    printf("\nENTERED flash_write_safe\n ");
 
-     // Bounds checking
-    if (flash_offset + data_len > FLASH_TARGET_OFFSET + FLASH_SIZE) {
+    flash_data flashData;
+    flashData.write_count = 0; 
+    flashData.data_ptr = data; 
+    flashData.data_len = data_len;
+    flash_write_safe_struct(offset, &flashData);
+}
+
+/// @brief  Writes data to flash memory at the specified offset.
+/// @param offset  Offset in flash memory to write data to.
+/// @param new_data     
+void flash_write_safe_struct(uint32_t offset, flash_data *new_data) {
+    uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+    // Ensure we don't exceed flash memory limits
+    if (flash_offset + sizeof(flash_data) > FLASH_TARGET_OFFSET + FLASH_SIZE) {
         printf("Error: Attempt to write beyond flash memory limits.\n");
-        return; // Exit if the operation is out of bounds
+        return;
     }
     
     uint32_t ints = save_and_disable_interrupts();
 
+    // Temporary structure to hold the current data
+    flash_data current_data;
+    memset(&current_data, 0, sizeof(flash_data));
+
+    // Read the existing data (if any)
+    memcpy(&current_data, (const void *)(XIP_BASE + flash_offset), sizeof(flash_data));
+  
+ 
+      // if no entry made yet, set write count to 0
+    if(current_data.write_count == -1) {
+        current_data.write_count = 0;
+    } 
+
+    // Increment the write count based on existing data
+    new_data->write_count = current_data.write_count + 1;
+    // Erase the sector before writing new data
     flash_range_erase(flash_offset, FLASH_SECTOR_SIZE);
-
-    flash_range_program(flash_offset, data, data_len);
-
+    // Write the new data, including the updated write count
+    flash_range_program(flash_offset, (const uint8_t *)new_data, sizeof(flash_data));
     restore_interrupts(ints);
-
 }
 
-// Function: flash_read_safe
-// Reads data from flash memory into a buffer.
-//
-// Parameters:
-// - offset: The offset from FLASH_TARGET_OFFSET where data is to be read.
-// - buffer: Pointer to the buffer where read data will be stored.
-// - buffer_len: Number of bytes to read.
-//
-// Note: The function performs bounds checking to ensure safe access.
 
 void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len) {
+    flash_data flashData;
+    flash_read_safe_struct(offset, &flashData);
+    if (buffer_len > flashData.data_len) buffer_len = flashData.data_len;
+    memcpy(buffer, flashData.data_ptr, buffer_len);
+}
 
-uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
-
-// Bounds checking
-
- if (flash_offset + buffer_len > FLASH_TARGET_OFFSET + FLASH_SIZE) {
+void flash_read_safe_struct(uint32_t offset, flash_data *data) {
+    uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+     // Bounds checking
+    if (flash_offset + sizeof(flash_data) > FLASH_TARGET_OFFSET + FLASH_SIZE) {
         printf("Error: Attempt to read beyond flash memory limits.\n");
-        return; // Exit if the operation is out of bounds
+        return;
     }
 
-memcpy(buffer, (const void *)(XIP_BASE + flash_offset), buffer_len);
+    // Reading Data
+    memcpy(data, (const void *)(XIP_BASE + flash_offset), sizeof(flash_data));
+}
 
-} 
+
 
 void flash_erase_safe(uint32_t offset) {
     uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
@@ -79,17 +93,3 @@ void flash_erase_safe(uint32_t offset) {
     }
     restore_interrupts(ints);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

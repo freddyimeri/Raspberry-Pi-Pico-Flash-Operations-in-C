@@ -5,31 +5,14 @@
 #include <string.h>
 #include "custom_fgets.h"
 
-// Function: execute_command
-// Parses and executes commands related to flash memory operations.
-//
-// Parameters:
-// - command: A string containing the command and its arguments.
-//
-// The function supports the following commands:
-// - FLASH_WRITE: Writes data to flash memory.
-// - FLASH_READ: Reads data from flash memory.
-// - FLASH_ERASE: Erases a sector of flash memory.
-//
-// Each command expects specific arguments following the command name.
 void execute_command(char *command) {
-    // Split the command string into tokens
     char *token = strtok(command, " ");
-
-    // Check for an empty or invalid command
     if (token == NULL) {
         printf("\nInvalid command\n");
         return;
     }
 
-    // Handle the FLASH_WRITE command
     if (strcmp(token, "FLASH_WRITE") == 0) {
-        // Parse the address
         token = strtok(NULL, " ");
         if (token == NULL) {
             printf("\nFLASH_WRITE requires an address and data\n");
@@ -37,55 +20,58 @@ void execute_command(char *command) {
         }
         uint32_t address = atoi(token);
 
-        // Parse the data, assuming it's enclosed in quotes
         token = strtok(NULL, "\"");
         if (token == NULL) {
             printf("\nInvalid data format for FLASH_WRITE\n");
             return;
         }
 
-        // Execute the write operation
-        flash_write_safe(address, (uint8_t *)token, strlen(token));
+        // Prepare the structure for writing
+        flash_data data_to_write;
+        memset(&data_to_write, 0, sizeof(data_to_write)); // Ensure the structure is clear
+        // memcpy(data_to_write.data, token, strlen(token)); // Copy the string into the structure's data field
+        data_to_write.data_len = strlen(token); // Set the data length
+
+        // Call the modified write function
+        flash_write_safe_struct(address, &data_to_write);
     }
-    // Handle the FLASH_READ command
     else if (strcmp(token, "FLASH_READ") == 0) {
-        // Parse the address
         token = strtok(NULL, " ");
         if (token == NULL) {
-            printf("\nFLASH_READ requires an address and length\n");
+            printf("\nFLASH_READ requires an address\n");
             return;
         }
         uint32_t address = atoi(token);
 
-        // Parse the length of data to read
-        token = strtok(NULL, " ");
-        if (token == NULL) {
-            printf("\nInvalid length for FLASH_READ\n");
-            return;
+        // Prepare a structure to receive the read data
+        flash_data data_read;
+        memset(&data_read, 0, sizeof(data_read)); // Clear the structure
+
+        // Call the modified read function
+        flash_read_safe_struct(address, &data_read);
+
+
+        // Displaying the metadata
+        printf("\nMetadata: Write count = %u\n", data_read.write_count);
+
+        // Print the read data
+        printf("\nData: ");
+        for (size_t i = 0; i < data_read.data_len; i++) {
+            // printf("%c", data_read.data[i]);
         }
-        size_t length = atoi(token);
-
-        // Prepare the buffer and execute the read operation
-        uint8_t buffer[length];
-        flash_read_safe(address, buffer, length);
-
-        // Output the read data
-        printf("\nData: %s\n", buffer);
+        printf("\n");
     }
-    // Handle the FLASH_ERASE command
     else if (strcmp(token, "FLASH_ERASE") == 0) {
-        // Parse the address
         token = strtok(NULL, " ");
         if (token == NULL) {
-            printf("FLASH_ERASE requires an address\n");
+            printf("\nFLASH_ERASE requires an address\n");
             return;
         }
         uint32_t address = atoi(token);
 
-        // Execute the erase operation
+        // Call the existing erase function
         flash_erase_safe(address);
     }
-    // Handle unknown commands
     else {
         printf("\nUnknown command\n");
     }
