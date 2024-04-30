@@ -64,8 +64,30 @@ This project provides a comprehensive suite of tools for managing flash memory o
 
 ### Flash Write Safe
 
-- **Secure Data Writing:** Utilizes optimized algorithms to safely write data to the flash memory. Ensures data integrity by preventing the overwriting of critical system areas, including the bootloader and currently running applications.
-- **Boundary Checking:** Automatically checks that data writes do not exceed flash memory limits, preventing potential data corruption and system crashes.
+The `flash_write_safe` function is a cornerstone of the flash memory management system, designed to write data securely to the Raspberry Pi Pico's flash memory. This function ensures that data is not only written correctly but also respects the device's memory architecture to prevent corruption and maximize the memory's lifespan.
+
+#### Functionality Overview
+
+- **Safety Checks:** Before any write operation, the function performs multiple checks to ensure the safety and correctness of the operation. This includes checking data validity, alignment with sector sizes, and adherence to memory boundaries.
+- **Sector Alignment:** Ensures that all write operations align with flash memory sectors, preventing data corruption across sectors.
+- **Limit Handling:** Confirms that the data does not exceed the permissible sector size minus the metadata, ensuring that each write operation fits within its designated sector.
+- **Memory Protection:** Verifies that operations do not extend beyond the flash memory's physical limits.
+
+#### Data Structure Management
+
+The `flash_write_safe` function utilizes the `flash_data` structure, which encapsulates the data to be written along with metadata that includes:
+
+- `valid`: A flag indicating whether the data block is valid.
+- `write_count`: Tracks how many times the memory sector has been written to, aiding in wear leveling.
+- `data_len`: Specifies the length of the data.
+- `data_ptr`: Points to the actual data to be written.
+
+This structured approach helps manage the flash memory more effectively, enhancing data integrity and reliability.
+
+
+
+
+
 
 ### Flash Read Safe
 
