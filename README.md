@@ -1,389 +1,326 @@
 # Table of Contents
 
 1. [Introduction](#introduction)
-    - [Project Overview](#project-overview)
-    - [Purpose and Significance](#purpose-and-significance)
-
-2. [Features and Capabilities](#features-and-capabilities)
-    - [What the Project Does](#what-the-project-does)
-    - [Key Functionalities](#key-functionalities)
-
-3. [Limitations](#limitations)
-    - [Known Constraints and Limitations](#known-constraints-and-limitations)
-
-4. [Getting Started](#getting-started)
-    - [Installation](#installation)
-    - [Setup Instructions](#setup-instructions)
-
-5. [Usage](#usage)
-    - [How to Use the Software](#how-to-use-the-software)
-    - [Code Examples](#code-examples)
-
-6. [Architecture and Design](#architecture-and-design)
-    - [System Architecture Diagram](#system-architecture-diagram)
-    - [Component Interaction](#component-interaction)
-
+   - [Project Overview](#project-overview)
+   - [Key Features](#key-features)
+2. [Getting Started](#getting-started)
+   - [Prerequisites](#prerequisites)
+   - [Installation](#installation)
+   - [Building the Project](#building-the-project)
+3. [Usage](#usage)
+   - [Basic Examples](#basic-examples)
+   - [Advanced Features](#advanced-features)
+4. [Architecture](#architecture)
+   - [System Overview](#system-overview)
+   - [Memory Management](#memory-management)
+5. [Function Details](#function-details)
+   - [flash_write_safe](#flash_write_safe)
+   - [flash_read_safe](#flash_read_safe)
+   - [flash_erase_safe](#flash_erase_safe)
+6. [Structured Data Management](#structured-data-management)
+   - [flash_data Structure](#flash_data-structure)
+   - [Metadata Management](#metadata-management)
 7. [Testing](#testing)
-    - [How to Run Tests](#how-to-run-tests)
-    - [Test Descriptions](#test-descriptions)
+   - [Test Suite Overview](#test-suite-overview)
+   - [Running Tests](#running-tests)
+8. [UML Diagrams](#uml-diagrams)
+   - [Function Interaction](#function-interaction)
+   - [Data Flow](#data-flow)
+9. [Contributing](#contributing)
+10. [License](#license)
+11. [Contact](#contact)
 
 
 
-8. [Authors and Acknowledgment](#authors-and-acknowledgment)
-    - [Credits](#credits)
-    - [Acknowledgments](#acknowledgments)
 
 
-9. [Contact](#contact)
-    - [Developer Contact Information](#developer-contact-information)
 
- 
+## Function Details: `flash_write_safe`
 
+### Overview
+The `flash_write_safe` function is designed to write data to the flash memory in a safe and controlled manner. It ensures that all write operations adhere to flash memory constraints such as alignment requirements and sector boundaries, which are critical for avoiding data corruption.
 
-
-## Introduction
-
-### Project Overview
-
-This project focuses on managing flash memory operations on the Raspberry Pi Pico, a popular microcontroller in the embedded systems field. The provided codebase offers functionalities for writing, reading, and erasing data in the non-volatile flash memory of the Raspberry Pi Pico. These operations are essential for applications requiring reliable data persistence even after power-down.
-
-### Purpose
-
-The primary purpose of this project is to implement and demonstrate effective methods for flash memory management on the Raspberry Pi Pico. Efficiently managing flash memory is critical for extending the device's memory lifespan and ensuring data integrity across power cycles. This project serves as a foundational toolset for developers aiming to utilize the Pico's hardware capabilities in various applications, from simple data logging to complex IoT solutions.
-
-### Significance
-
-The significance of this project lies in its ability to provide robust tools for persistent data storage, addressing common challenges in embedded systems development. The Raspberry Pi Pico, like many microcontrollers, operates in environments where power interruptions are frequent, and data loss can be costly. By leveraging the Pico's onboard flash memory, this project helps safeguard critical data against interruptions, ensuring safe and efficient data retention.
-
-Incorporating best practices in flash memory operations not only enhances the reliability of embedded systems but also improves their performance and scalability. This project contributes to the broader Raspberry Pi Pico community by offering a tested, deployable set of functions that manage flash memory with precision and care.
-
-
-## Features and Capabilities
-
-This project provides a comprehensive suite of tools for managing flash memory on the Raspberry Pi Pico, enabling robust and reliable non-volatile data storage. Here are the key features and capabilities that distinguish our project:
-
-### Flash Write Safe
-
-The `flash_write_safe` function is a cornerstone of the flash memory management system, designed to write data securely to the Raspberry Pi Pico's flash memory. This function ensures that data is not only written correctly but also respects the device's memory architecture to prevent corruption and maximize the memory's lifespan.
-
-#### Functionality Overview
-
-- **Safety Checks:** Before any write operation, the function performs multiple checks to ensure the safety and correctness of the operation. This includes checking data validity, alignment with sector sizes, and adherence to memory boundaries.
-- **Sector Alignment:** Ensures that all write operations align with flash memory sectors, preventing data corruption across sectors.
-- **Limit Handling:** Confirms that the data does not exceed the permissible sector size minus the metadata, ensuring that each write operation fits within its designated sector.
-- **Memory Protection:** Verifies that operations do not extend beyond the flash memory's physical limits.
-
-#### Data Structure Management
-
-The `flash_write_safe` function utilizes the `flash_data` structure, which encapsulates the data to be written along with metadata that includes:
-
-- `valid`: A flag indicating whether the data block is valid.
-- `write_count`: Tracks how many times the memory sector has been written to, aiding in wear leveling.
-- `data_len`: Specifies the length of the data.
-- `data_ptr`: Points to the actual data to be written.
-
-This structured approach helps manage the flash memory more effectively, enhancing data integrity and reliability.
-
-
-
-
-
-
-### Flash Read Safe
-
-- **Efficient Data Retrieval:** Implements efficient methods to read data back from flash memory, ensuring fast and reliable access to stored information.
-- **Error Handling:** Includes robust error handling to deal with scenarios where requested data may not be available or the read operations are out of the designated memory bounds.
-
-### Flash Erase Safe
-
-- **Sector Erase:** Provides functionality to erase data at specified offsets, allowing for the reuse of memory sectors safely and effectively.
-- **Safe Operations:** Ensures that erase operations are performed safely without impacting neighboring data sectors, crucial for maintaining data integrity.
-
-### Structured Data Handling
-
-- **Metadata Management:** Each data block written includes metadata, such as write counts and data length, which aids in managing the lifecycle of each flash memory sector.
-- **Enhanced Data Integrity:** Uses structured data blocks to encapsulate and manage user data more effectively, reducing errors and enhancing the performance of memory operations.
-
-### Comprehensive Testing
-
-- **Robust Test Suite:** Includes a detailed set of tests that cover all functionalities, from basic operations to edge cases, ensuring that every aspect of the software behaves as expected under various conditions.
-- **Error Simulation:** Simulates common flash memory errors to verify that the system can handle unexpected scenarios gracefully.
-
-### Architecture Flexibility
-
-- **Modular Design:** Crafted with a modular approach, allowing developers to easily integrate these operations into larger projects or modify them to suit specific requirements.
-- **Documentation and Examples:** Extensive documentation and example usage scenarios are provided, making it easy for new users to implement and adapt the functionalities in their projects.
-
-
-
-
-## Limitations
-
-While the flash memory management tools provided in this project offer robust functionalities for the Raspberry Pi Pico, there are several limitations that users should be aware of. Understanding these limitations will help users better integrate and utilize these tools within their specific contexts.
-
-### Hardware Specificity
-
-- **Platform Dependency:** The current implementation is specifically tailored for the Raspberry Pi Pico. As such, direct application to other microcontrollers or Raspberry Pi models may require modifications to accommodate different hardware architectures, especially concerning flash memory specifications and access methods.
-
-### Memory Wear
-
-- **Write Wear:** Flash memory has a limited number of write cycles. Excessive writing to the flash can lead to wear-out, which might not be optimally managed by the current version of the software. Users should implement wear-leveling techniques to extend the lifespan of their flash memory, which are not currently provided by this project.
-
-### Performance Constraints
-
-- **Memory Access Speeds:** The performance of flash memory operations (write, read, erase) is constrained by the hardware capabilities of the Raspberry Pi Pico. Intensive operations may lead to slower system performance, particularly noticeable in applications requiring high-speed data logging or frequent memory access.
-
-### Error Handling
-
-- **Limited Recovery Options:** While the project includes basic error handling, more complex error recovery mechanisms are not implemented. This could be a limitation in critical systems where data recovery capabilities are essential.
-
-### Scalability
-
-- **Fixed Memory Utilization:** The code assumes a fixed flash memory layout and size, which may not scale well with future versions of hardware or different configurations. Adjusting the code to dynamically handle varying memory sizes or layouts would require additional development.
-
-### Integration Complexity
-
-- **Integration Effort:** Integrating these tools into existing projects or systems may require a significant understanding of both the project's architecture and the target system’s memory management protocols.
-
-### Documentation and Support
-
-- **Community Resources:** While documentation is provided, the project currently lacks a broad community support base or forums for troubleshooting specific issues. This might limit users' ability to solve unique problems or adapt functionalities to custom applications.
-
-
-## Getting Started
-
-These instructions will guide you through the setup process to install and run the flash memory management tools on your Raspberry Pi Pico. Follow these steps carefully to ensure a smooth setup and successful operation.
-
-### Prerequisites
-
-Before you begin, make sure you have the following:
-
-- A Raspberry Pi Pico microcontroller.
-- Access to a computer with development tools installed (e.g., C/C++ compiler, CMake).
-- The Raspberry Pi Pico SDK installed. Follow the Raspberry Pi Pico SDK setup guide if you haven't done this yet.
-
-### Installation
-
-#### Clone the Repository
-
-Clone this repository to your local machine using the following command:
-
-```bash
-git clone https://github.com/yourusername/yourrepositoryname.git
+### Signature
+```c
+void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len);
 ```
+### Parameters
 
-Navigate to the cloned directory:
+- **`offset`**: The offset from the base of the flash memory where data writing begins. This offset needs to be aligned with the flash sector size.
+- **`data`**: Pointer to the data buffer that needs to be written to flash.
+- **`data_len`**: The length of the data in bytes that will be written to flash.
 
-```bash
-cd yourrepositoryname
-```
+### Operational Logic
 
-Build the Project
+- **Offset Validation**:
+  - The function first checks if the offset is aligned with the flash sector size. Flash memory typically requires that write operations begin at sector boundaries to avoid partial writes that can lead to data corruption.
 
-Create a build directory
+- **Data Validation**:
+  - It checks if the data pointer is NULL and if `data_len` is greater than zero. Writing operations with invalid data pointers or zero length are rejected to prevent runtime errors and undefined behavior.
 
-```bash
-mkdir build
-cd build
-```
+- **Boundary Checks**:
+  - The function calculates if the data to be written stays within the physical memory limits of the flash. This prevents any attempt to write data beyond the available flash memory, which can overwrite other critical data or system areas.
 
-Configure the project with CMake:
+- **Sector Erase and Write**:
+  - Before new data can be programmed into flash memory, the relevant sector(s) must be erased. `flash_write_safe` handles this by first erasing the sector at the specified offset.
+  - After erasing, the data is written to the flash memory. This two-step process ensures that the flash memory is ready to receive new data and that the data is written correctly.
 
-```bash
-cmake ..
-```
+### Importance
 
-Compile the code:
+- **Data Integrity**: Ensures that each write operation is performed correctly without corrupting other data, crucial for systems where data reliability is key.
+- **System Stability**: By enforcing boundary and alignment checks, the function prevents system crashes and data corruption scenarios that could arise from improper flash memory operations.
+- **Performance Considerations**: While ensuring safety, the function is also designed to be as efficient as possible under the constraints of operating directly with hardware.
 
-```bash
-make
-```
+### Example Usage
 
-This will generate the executable and any necessary libraries.
-
-### Running the Code
-
-To run the program, connect your Raspberry Pi Pico to your computer and upload the compiled code using the USB connection. Detailed instructions on uploading code to the Raspberry Pi Pico can be found in the official Raspberry Pi Pico documentation.
-
-### First Use
-
-After successfully uploading the code, you can interact with the flash memory using the implemented functions:
-
-- **Writing data to flash:** Call `flash_write_safe()` with the desired offset, data pointer, and data length.
-- **Reading data from flash:** Use `flash_read_safe()` to retrieve data from a specified flash address.
-- **Erasing flash sectors:** Use `flash_erase_safe()` to clear data from specified sectors.
-
-### Troubleshooting
-
-If you encounter issues during installation or execution, ensure all dependencies are correctly installed, and the SDK setup is complete. Review the error messages for clues and check the connections to your Raspberry Pi Pico.
-
-
-
-
-## Usage
-
-This section explains how to use the flash memory management functions implemented in the project. Here, you'll find examples on how to write, read, and erase data in the flash memory of the Raspberry Pi Pico, along with detailed descriptions of each function's parameters and expected behaviors.
-
-### Writing Data to Flash
-
-To write data to the flash memory, use the `flash_write_safe()` function. This function ensures that the data is written safely to the specified location without corrupting other parts of the flash memory.
-
-#### Example:
+Here's how you might use `flash_write_safe` in an application:
 
 ```c
 #include "flash_ops.h"
 
-// Data to be written
-const uint8_t data[] = "Hello, flash memory!";
-uint32_t offset = 0x1000;  // Start writing at this flash memory offset
+void example_write_to_flash() {
+    const uint8_t sample_data[] = {0x01, 0x02, 0x03, 0x04};
+    uint32_t flash_offset = 0x1000; // Example offset, aligned as required.
 
-// Writing data to flash
-flash_write_safe(offset, data, sizeof(data));
-
-```
-
-Parameters:
-
-- offset: The offset in flash memory where data will start being written.
-- data: Pointer to the data array to be written.
-- data_len: Length of the data array.
-
-### Reading Data from Flash
-
-To read data from the flash memory, use the `flash_read_safe()` function. This function reads data from a specified flash memory location into a buffer.
-
-#### Example:
-
-```c
-#include "flash_ops.h"
-
-uint8_t buffer[100];  // Buffer to store the read data
-uint32_t offset = 0x1000;  // Read from this flash memory offset
-
-// Reading data from flash
-flash_read_safe(offset, buffer, sizeof(buffer));
-
-
-```
-
-Parameters:
-
-- offset: The offset in flash memory from where to start reading.
-- buffer: Buffer to store the read data.
-- buffer_len: Size of the buffer.
-
-### Erasing Data from Flash
-
-To erase data in the flash memory, use the `flash_erase_safe()` function. This function erases the data in specified sectors, making them ready for new data.
-
-#### Example:
-
-```c
-#include "flash_ops.h"
-
-uint32_t offset = 0x1000;  // Start erasing at this flash memory offset
-
-// Erasing flash sector
-flash_erase_safe(offset);
-
-```
-Parameters:
-
-- offset: The offset in flash memory from where the erase should start.
-
-### Additional Functionality
-
-For advanced users needing to handle more complex scenarios or integrate additional functionalities, refer to the detailed API documentation provided in the project files. This includes handling metadata, optimizing performance, and error management.
-
-
-## Architecture and Design
-
-This section outlines the architecture and design of the flash memory management system developed for the Raspberry Pi Pico. The system is designed with modularity and efficiency in mind, focusing on the robust management of flash memory operations—write, read, and erase.
-
-### System Components
-
-The project is structured into several key components:
-
-- **Flash Operations Module:** This module contains all the logic required to interact with the flash memory hardware. It encapsulates the `flash_write_safe`, `flash_read_safe`, and `flash_erase_safe` functions.
-- **Data Management Module:** Manages data integrity and formats data blocks for writing. It also parses blocks when reading from flash.
-- **Error Handling Module:** Provides robust error detection and handling strategies to ensure the system's reliability and stability.
-- **Test Module:** Contains comprehensive tests that validate each function of the flash operations module under various conditions.
-
-### Interaction Diagram
-
-The following diagram illustrates how these components interact within the system:
-
-DIAGRAMMMMMMMMMMMMMMMMMMMMM
-
-## Design Principles
-
-- **Modularity:** Each component is designed to be independent yet inter-operable. This allows for easier maintenance and future enhancements without significant disruptions to existing functionality.
-- **Robustness:** Emphasis on error handling and validations ensures that the system can recover gracefully from common failures, enhancing its reliability.
-- **Efficiency:** Optimized algorithms for flash memory operations reduce wear and enhance performance, crucial for embedded systems with limited resources.
-
-### Hardware Interface
-
-The system directly interacts with the Raspberry Pi Pico's hardware flash memory. It leverages the low-level APIs provided by the Pico SDK to perform physical memory operations while ensuring data safety and integrity.
-
-
-
-## Testing
-
-The project includes a comprehensive suite of tests to ensure the robust functionality and reliability of the flash memory management system on the Raspberry Pi Pico. These tests are designed to verify each aspect of flash memory operations, including writing, reading, and erasing under various conditions.
-
-### Test Implementation
-
-Tests are integrated within the `main.c` file, which allows for direct execution on the Raspberry Pi Pico hardware. The `run_all_tests()` function is called here, which sequentially executes all defined test functions.
-
-### Running the Tests
-
-To run the tests, you will need to compile and upload the code to your Raspberry Pi Pico with the `main.c` file as the entry point. Here is how you can execute the tests:
-
-1. **Compile and Upload:**
-   Follow the setup instructions provided in the Getting Started section to compile the project and upload it to your Raspberry Pi Pico.
-
-2. **Execute the Tests:**
-   Once the Pico is powered and connected via USB, the tests will automatically start upon execution of the program. Ensure that your terminal or serial monitor is open to view the test results.
-
-   Here is what the relevant part of your `main.c` looks like:
-
-
-```c
-int main() {
-    stdio_init_all();
-
-    // Wait for USB connection
-    while (!stdio_usb_connected()) {
-        sleep_ms(100);
-    }
-    printf("USB Connected.\n");
-
-    // Running tests
-    printf("Running all tests...\n");
-    run_all_tests();
-
-    // Completion message
-    printf("Byeeeeee all tests...\n");
-
-    return 0;
+    flash_write_safe(flash_offset, sample_data, sizeof(sample_data));
+    // Additional logic to verify the write or handle errors could be added here.
 }
+```
 
+## Capabilities and Limitations of `flash_write_safe`
+
+| Feature                                           | Supported          |
+|---------------------------------------------------|--------------------|
+| Data Alignment Verification                       | :white_check_mark: |
+| Boundary Check                                    | :white_check_mark: |
+| Sector Erase Before Writing                       | :white_check_mark: |
+| Data Size Validation                              | :white_check_mark: |
+| Handling of Null Data Pointers                    | :white_check_mark: |
+| Increment Write Counter                           | :white_check_mark: |
+| Serialization of Data Structures                  | :white_check_mark: |
+| Writing Beyond Flash Memory Limits                | :x:                |
+| Automatic Wear Leveling                           | :x:                |
+| Real-Time Data Encryption                         | :x:                |
+| Asynchronous Writing                              | :x:                |
+| Data Compression Before Writing                   | :x:                |
+
+### Detailed Feature Descriptions
+
+- **Data Alignment Verification**: Ensures that write operations begin at sector boundaries to avoid partial writes and potential data corruption.
+- **Boundary Check**: Verifies that write operations do not exceed the physical limits of the flash memory, safeguarding against overwriting critical data.
+- **Sector Erase Before Writing**: Automatically erases the sector before programming new data, ensuring a clean state for reliable data storage.
+- **Data Size Validation**: Checks if the data length exceeds the permissible limits for a single sector, accounting for metadata, and rejects oversized data.
+- **Handling of Null Data Pointers**: Properly manages cases with null data pointers to prevent runtime errors.
+- **Increment Write Counter**: Accurately tracks and increments the write count for each sector, which is crucial for monitoring flash wear and implementing wear leveling strategies.
+- **Serialization of Data Structures**: Effectively serializes structured data into a byte array for flash storage, handling complex data types efficiently.
+- **Writing Beyond Flash Memory Limits**: Does not support operations that attempt to write data beyond the established flash memory boundaries, to prevent system instability and data loss.
+- **Automatic Wear Leveling**: The function does not automatically distribute write operations to extend the lifespan of the flash memory, which could be a limitation in systems requiring enhanced durability.
+- **Real-Time Data Encryption**: Lacks the capability to encrypt data on-the-fly before writing to flash, which might be necessary for applications with high security requirements.
+- **Asynchronous Writing**: Operates synchronously, which might not be optimal for applications requiring non-blocking operations.
+- **Data Compression Before Writing**: Does not compress data before writing, which could be a limitation in scenarios where memory utilization efficiency is critical.
+
+
+### Conclusion
+
+This function is a foundational component of flash memory management in embedded applications, especially in systems like the Raspberry Pi Pico where direct control over hardware is a frequent requirement. It showcases how embedded systems handle low-level operations that are typically abstracted away in higher-level programming environments. This detailed control and precise handling ensure that the hardware's capabilities are maximally utilized while maintaining system integrity and reliability.```
+
+This passage gives a concluding overview of the significance of the `flash_write_safe` function in the context of embedded system programming, emphasizing its critical role in low-level hardware management. It could be included towards the end of the section discussing the `flash_write_safe` function to wrap up the explanation and highlight the importance of such functions in practical scenarios.
+
+
+
+
+<img src="images/Flash_write_safe.png" alt="Image Alt Text" width="600" height="600">
+
+
+
+## Function Details: `flash_read_safe`
+
+### Overview
+
+The `flash_read_safe` function is designed to safely read data from the flash memory at a specified offset, ensuring that the operation adheres to flash memory alignment and boundary requirements to prevent data corruption and access errors. This function only proceeds with reading if the data is marked valid and is correctly initialized.
+
+### Signature
+
+```c
+void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len);
+
+```
+## Parameters
+
+- **`offset`**: The offset from the base of the flash memory where the read starts.
+- **`buffer`**: The buffer to store the read data.
+- **`buffer_len`**: The length of the buffer to ensure no overflow occurs during the read.
+
+## Operational Logic
+
+- **Offset Calculation**:
+  - Calculates the actual flash memory address by adding the provided offset to the base address of the flash. This address is used for all subsequent read operations.
+
+- **Offset Validation**:
+  - Checks if the flash offset is aligned with the sector size. Misalignment can cause partial sector read issues, leading to potential data corruption.
+
+- **Boundary Check**:
+  - Verifies that the read operation does not extend beyond the flash memory's physical limits, protecting against attempts to access undefined memory areas.
+
+- **Memory Allocation**:
+  - Allocates a buffer large enough to hold the metadata and the requested data. This buffer is used to temporarily store data read from flash.
+
+- **Data Transfer**:
+  - Copies data from the flash memory starting at the calculated offset into the allocated buffer. This includes the metadata and the actual data.
+
+- **Data Validation and Copy**:
+  - Deserializes the buffer into a structured format to access the metadata and validates the integrity of the data.
+  - If the data is marked as valid and the buffer size is sufficient, it copies the data to the user-provided buffer. Otherwise, it handles errors such as invalid data or insufficient buffer size.
+
+- **Cleanup**:
+  - Frees the allocated buffer to avoid memory leaks.
+
+## Error Handling
+
+Handles several error scenarios gracefully, providing clear error messages for:
+- **Misalignment of the read offset**.
+- **Attempts to read beyond the flash memory's boundaries**.
+- **Insufficient buffer size provided by the caller**.
+- **Encountering invalid data at the specified offset**.
+
+## Example Usage
+
+Here's how you might use `flash_read_safe` in an application:
+
+```c
+#include "flash_ops.h"
+
+void example_read_from_flash() {
+    uint8_t buffer[256]; // Allocate a buffer for reading
+    uint32_t offset = 0x1000; // Example offset, aligned as required
+
+    flash_read_safe(offset, buffer, sizeof(buffer));
+    // Additional logic to verify the read or handle errors could be added here
+}
+```
+
+## Capabilities and Limitations of `flash_read_safe`
+
+| Feature                                           | Supported          | Details                                                      |
+|---------------------------------------------------|--------------------|--------------------------------------------------------------|
+| Offset Alignment Verification                     | :white_check_mark: | Ensures read operations begin at sector boundaries.          |
+| Boundary Check                                    | :white_check_mark: | Prevents reading beyond the flash memory's physical limits.  |
+| Handling of NULL Pointers for Buffer              | :x:                | Does not explicitly handle NULL pointers for buffer.         |
+| Data Validity Check                               | :white_check_mark: | Proceeds only if data is marked valid.                       |
+| Memory Allocation for Read Operation              | :white_check_mark: | Allocates memory dynamically to handle read data.            |
+| Error Handling for Misalignment and Overflows     | :white_check_mark: | Provides clear error messages for misalignment and overflows. |
+| Deserialization of Data                           | :white_check_mark: | Converts data from raw flash format to structured data.      |
+| Buffer Size Validation                            | :white_check_mark: | Checks if provided buffer is sufficient for data length.     |
+| Real-Time Data Decompression                      | :x:                | Does not support decompression of data.                      |
+| Data Encryption/Decryption Handling               | :x:                | Does not handle encrypted data.                              |
+| Asynchronous Read Operations                      | :x:                | Supports only synchronous operations.                        |
+| Automatic Memory Management                       | :x:                | Requires manual management of memory allocation/free.        |
+
+### Additional Notes
+- **Offset Alignment Verification** and **Boundary Check** are crucial for maintaining the integrity of data reads, ensuring that operations do not disrupt the system's stability by reading inappropriate memory areas.
+- **Data Validity Check** ensures that corrupted or uninitialized data is not mistakenly read, which could lead to errors or undefined behavior in the application using this data.
+- **Error Handling**: The function is robust in providing feedback for various common errors such as misalignment or attempts to read beyond the available memory, which helps in debugging and maintaining the system.
+- **Memory Management**: Users of this function need to be aware that while the function allocates memory for reading data, it also requires the caller to manage the memory post-operation, specifically to free the allocated buffer.
+
+This table aims to provide a comprehensive overview of what the `flash_read_safe` function can do and its limitations, helping developers understand how to integrate it into their systems and what additional measures might be needed to handle its limitations.
+
+
+
+
+<img src="images/read_safe1.png" alt="Image Alt Text" width="600" height="600">
+
+
+
+## Function Details: `flash_erase_safe`
+
+### Overview
+
+The `flash_erase_safe` function is meticulously designed to securely erase a sector of the flash memory at a specified offset. This critical operation adheres strictly to alignment and boundary conditions specific to flash memory. By ensuring that the sector is correctly aligned and within the permissible boundaries, the function avoids partial erasures and potential data corruption. During the erase process, it preserves essential metadata, which is crucial for maintaining data integrity and supporting overall system stability. This function is pivotal in applications where data security and integrity are paramount.
+
+### Signature
+
+```c
+void flash_erase_safe(uint32_t offset);
+```
+## Parameters
+
+- **`offset`**: The offset within the flash memory where the sector begins to be erased.
+
+## Operational Logic
+
+- **Offset Calculation and Validation**:
+  - The function calculates the actual address in flash memory where the erasure will start, factoring in the specified offset.
+  - It checks if this offset aligns with the sector size. Misalignment can lead to partial sector erasures, which might cause data integrity issues.
+
+- **Boundary Check**:
+  - Ensures that the erasing process does not exceed the limits of the flash memory to prevent corrupting data outside the intended sector.
+
+- **Write Count Retrieval and Increment**:
+  - Retrieves the current write count for the sector from metadata, increments it to track the number of erase cycles, aiding in wear leveling.
+
+- **Interrupts Handling**:
+  - Disables interrupts to maintain the atomicity of the erase operation, ensuring it is not interrupted and potentially left incomplete.
+
+- **Sector Start Calculation**:
+  - Computes the exact start of the sector ensuring it aligns correctly with sector boundaries.
+
+- **Metadata Backup and Erase**:
+  - Backs up metadata before erasing to preserve critical data like write counts.
+  - Performs the actual erasure of the sector.
+
+- **Metadata Restoration**:
+  - After erasing, restores essential metadata at the start of the sector to maintain data integrity. Marks data as invalid since the sector has been erased.
+
+- **Restore Operation State**:
+  - Re-enables interrupts after completing the erase to return the system to its normal operational state.
+
+## Error Handling
+
+- **Offset Misalignment**: Returns an error if the offset does not align with sector boundaries, preventing accidental data corruption.
+- **Boundary Exceedance**: Stops the operation with an error if the erasure would go beyond flash memory limits, safeguarding against potential system instability.
+
+## Example Usage
+
+Here's a basic example of how to use `flash_erase_safe` in an application:
+
+```c
+#include "flash_ops.h"
+
+void example_erase_sector() {
+    uint32_t offset = 0x1000; // Ensure this offset is within the flash memory's limits and properly aligned
+    flash_erase_safe(offset);
+    // Additional logic to handle post-erase operations or check results might be added here
+}
 ```
 
 
-## Understanding Test Outputs
+## Capabilities and Limitations of `flash_erase_safe`
 
-Each test function will output its results to the console, indicating whether it has passed or failed along with any relevant messages. This immediate feedback will help you understand the behavior of the system under test.
+| Feature                                       | Supported          | Details                                                      |
+|-----------------------------------------------|--------------------|--------------------------------------------------------------|
+| Alignment Verification                        | :white_check_mark: | Ensures erasure only occurs if the offset aligns with sector boundaries. |
+| Boundary Check                                | :white_check_mark: | Prevents erasure beyond the flash memory's physical limits.  |
+| Metadata Preservation                         | :white_check_mark: | Preserves essential metadata like write counts before erasing. |
+| Error Handling for Misalignment and Overflows | :white_check_mark: | Provides clear error messages for misalignment and attempts to erase beyond limits. |
+| Interrupt Handling                            | :white_check_mark: | Disables interrupts during erasure to ensure operation atomicity. |
+| Sector Erasure Accuracy                       | :white_check_mark: | Computes exact sector start and performs precise erasure.    |
+| Metadata Restoration                          | :white_check_mark: | Restores metadata post-erasure to ensure flash management data integrity. |
+| Automatic Reallocation                        | :x:                | Does not handle reallocation of data within flash storage.   |
+| Asynchronous Operation                        | :x:                | Operation is synchronous, potentially blocking system operations during erase. |
+| Data Recovery                                 | :x:                | Does not support recovery of erased data, ensuring data is irrecoverable post-erase. |
 
-## Troubleshooting Test Failures
+### Additional Notes
+- **Alignment Verification** and **Boundary Check** are critical to avoid data corruption and ensure that the erase operation affects only the intended sector.
+- **Error Handling**: The function is robust in providing feedback and preventing operations that could lead to system instability or data loss.
+- **Interrupt Handling** and **Sector Erasure Accuracy** are essential for maintaining system performance and integrity during potentially disruptive operations like erasing flash sectors.
+- **Metadata Restoration** helps in maintaining the management and operational continuity of flash memory by ensuring that metadata remains consistent and accurate, even after an erase operation.
+- **Limitations**: The synchronous nature of the operation could impact system responsiveness, especially in systems with real-time requirements.
 
-If tests fail:
+This table should be useful for developers and system architects in understanding the operational scope, reliability features, and potential constraints of the `flash_erase_safe` function.
 
-- Review the console messages for specific errors or clues.
-- Ensure that your Raspberry Pi Pico is correctly connected and functioning.
-- Revisit the setup instructions to verify that the environment is configured correctly.
-- Check for hardware issues that might affect the test outcomes, such as improper connections or faulty components.
 
-## Authors and Acknowledgment
 
-The original template for this project was cloned from [https://gitlab.uwe.ac.uk/f4-barnes/cap_template](https://gitlab.uwe.ac.uk/f4-barnes/cap_template) by Frazer Barnes.
+
+
+
+<img src="images/erase.png" alt="Image Alt Text" width="600" height="600">
