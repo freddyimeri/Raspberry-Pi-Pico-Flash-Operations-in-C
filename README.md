@@ -7,32 +7,176 @@
    - [Prerequisites](#prerequisites)
    - [Installation](#installation)
    - [Building the Project](#building-the-project)
-3. [Usage](#usage)
+   - [Deploying the Firmware](#deploying-the-firmware)
+3. [Quick Start Guide](#quick-start-guide)
+4. [Usage](#usage)
    - [Basic Examples](#basic-examples)
    - [Advanced Features](#advanced-features)
-4. [Architecture](#architecture)
+5. [Architecture](#architecture)
    - [System Overview](#system-overview)
    - [Memory Management](#memory-management)
-5. [Function Details](#function-details)
+6. [Function Details](#function-details)
    - [flash_write_safe](#flash_write_safe)
    - [flash_read_safe](#flash_read_safe)
    - [flash_erase_safe](#flash_erase_safe)
-6. [Structured Data Management](#structured-data-management)
+7. [Structured Data Management](#structured-data-management)
    - [flash_data Structure](#flash_data-structure)
-   - [Metadata Management](#metadata-management)
-7. [Testing](#testing)
+   - [DeviceConfig Structure](#deviceconfig-structure)
+8. [Testing](#testing)
    - [Test Suite Overview](#test-suite-overview)
    - [Running Tests](#running-tests)
-8. [UML Diagrams](#uml-diagrams)
+9. [API Documentation](#api-documentation)
+10. [Performance Benchmarks](#performance-benchmarks)
+11. [Troubleshooting](#troubleshooting)
+12. [FAQ](#faq)
+13. [Community and Contributions](#community-and-contributions)
+14. [Acknowledgments](#acknowledgments)
+15. [Security](#security)
+16. [Versioning and Changelog](#versioning-and-changelog)
+17. [License](#license)
+18. [Contact](#contact)
+19. [UML Diagrams](#uml-diagrams)
    - [Function Interaction](#function-interaction)
    - [Data Flow](#data-flow)
-9. [Contributing](#contributing)
-10. [License](#license)
-11. [Contact](#contact)
+
+
+
+# Introduction
+
+This section provides an overview of the project, outlining its purpose, scope, and the functionalities it offers. It sets the stage for understanding how the provided code interacts with the Raspberry Pi Pico's flash memory to perform critical operations securely and efficiently.
+
+## Project Overview
+
+The project is centered around developing robust software for managing the flash memory on the Raspberry Pi Pico. Given the Pico's constraints and capabilities, the software is designed to handle flash memory operations that are crucial for maintaining data integrity, especially in applications requiring non-volatile storage solutions. The software ensures that all read, write, and erase operations on the flash are performed safely, adhering to best practices in embedded systems programming.
+
+Key aspects include:
+- Ensuring alignment with flash memory sector boundaries to avoid partial writes or erases.
+- Implementing rigorous checks to prevent operations from exceeding the flash memory's physical boundaries.
+- Utilizing a structured approach to manage data effectively, which includes keeping track of the number of write operations to aid in wear leveling.
+
+## Key Features
+
+- **Safe Flash Memory Operations**: Ensures that all write, read, and erase operations are conducted within the strict boundaries and specifications of the hardware, protecting against common flash memory issues like data corruption or unintended overwrites.
+- **Wear Leveling Support**: Tracks write operations to each sector, helping distribute the wear more evenly across the flash memory, which is crucial for prolonging the life of the device's memory.
+- **Error Handling**: Robust error handling capabilities that provide clear feedback and prevent operations under unsafe conditions, such as misaligned accesses or attempts to operate outside the memory boundaries.
+- **Structured Data Management**: Supports operations on structured data, allowing for serialized/deserialized data operations directly on the flash memory, which is useful for applications requiring the storage and retrieval of configuration settings or device states.
+- **Extensive Testing**: Includes a comprehensive suite of tests that validate the functionality and robustness of flash memory operations under various conditions, ensuring reliability and stability in deployment.
+
+This project aims to deliver a reliable and efficient toolset for Raspberry Pi Pico developers, enhancing their ability to build stable and durable embedded systems.
 
 
 
 
+
+
+# Getting Started
+
+This section guides you through getting your development environment set up and running the project. Follow these steps to start using the software on your Raspberry Pi Pico.
+
+## Prerequisites
+
+Before you begin, ensure you have the following prerequisites installed:
+- **Raspberry Pi Pico SDK**: Ensures that you have the necessary libraries and tools to develop for the Raspberry Pi Pico.
+- **CMake**: Used for building the software from source.
+- **GNU Make**: Required for automating the build process.
+- **Git**: Needed to clone the repository and manage the source code versions.
+- **Python 3**: For running scripts that might be needed during setup or deployment.
+
+Ensure that your development environment is set up according to the [official Raspberry Pi Pico documentation](https://www.raspberrypi.org/documentation/rp2040/getting-started/).
+
+## Installation
+
+To install the software, you need to clone the project repository and prepare your Raspberry Pi Pico for the firmware:
+
+1. **Clone the Repository**:
+   Open a terminal and run the following command to clone the repository:
+   ```bash
+   git clone https://gitlab.uwe.ac.uk/a2-imeri/cap_template.git
+   ```
+
+This command downloads the latest version of this project  on your local machine.
+
+### Prepare the Raspberry Pi Pico
+Connect your Raspberry Pi Pico to your computer in bootloader mode. This is typically done by holding the BOOTSEL button while plugging the Pico into the USB port of your computer.
+
+### Building the Project
+
+After installing the prerequisites and cloning the repository, you can build the project as follows:
+
+#### Navigate to the Build Directory
+Change into the build directory inside the cloned repository:
+```bash
+cd cap_template/build
+```
+#### Build the Project
+Use CMake and Make to compile the project. Run the following commands in the terminal:
+
+```bash
+cmake ..
+make
+```
+
+### Deploy the Firmware
+
+Once the build is successful, a file named `cap_template.uf2` will be generated. Copy this file to your Raspberry Pi Pico, which appears as a mass storage device when in bootloader mode. Simply drag and drop or copy-paste the `cap_template.uf2` file onto the Pico.
+
+After these steps, your Raspberry Pi Pico will reboot automatically, and the new firmware will start running. You can now begin working with the provided software functionalities for flash memory operations.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Architecture
+
+This section provides an in-depth look at the software architecture of the flash memory operations designed for the Raspberry Pi Pico. It discusses the overall system structure, focusing on memory management techniques and how the software interacts with the RP2040 microcontroller's hardware capabilities to manage flash memory efficiently.
+
+### System Overview
+
+The software architecture is structured around modular components that manage the flash memory on the Raspberry Pi Pico. This includes routines for reading, writing, and erasing flash memory, along with advanced management features such as wear leveling and error handling.
+
+- **Components**:
+  - **Flash Operations**: Core functions that perform low-level flash memory operations.
+  - **Helper Functions**: Utility functions that assist with tasks like data serialization/deserialization and memory calculations.
+  - **Error Management**: Robust error handling mechanisms that ensure the system's reliability and stability during flash operations.
+
+- **Integration**:
+  - How the software interfaces with the RP2040’s hardware features to execute flash memory operations.
+  - Explanation of the integration points with the Pico SDK and other libraries.
+
+### Memory Management
+
+Memory management within this project is crucial for ensuring efficient use of the RP2040's flash memory. This section outlines the strategies and implementations used to handle memory safely and effectively.
+
+- **Flash Memory Layout**:
+  - **Sector Management**: Details on how flash memory sectors are managed, including sector allocation for different types of data and the importance of alignment.
+  - **Metadata Management**: Describes how metadata is used to track the state and integrity of data blocks within the flash memory.
+
+- **Memory Operations**:
+  - **Writing to Flash**: Deep dive into the `flash_write_safe` function, which includes steps for ensuring data alignment, preventing data corruption, and managing write wear.
+  - **Reading from Flash**: Examination of the `flash_read_safe` function, focusing on how data integrity checks are performed before data is read.
+  - **Erasing Flash**: Insights into the `flash_erase_safe` function, explaining how sectors are safely erased while preserving essential metadata.
+
+- **Safety and Integrity**:
+  - **Data Validation**: Techniques used to validate data before operations are executed to prevent errors and data corruption.
+  - **Wear Leveling**: Strategies implemented to evenly distribute write and erase cycles across the flash memory to extend its lifespan.
+
+### Architectural Diagram
+
+- **Flowcharts**: Visual diagrams that illustrate the flow of data and control across the system during flash memory operations.
+- **UML Diagrams**: Use of Unified Modeling Language diagrams to detail the interaction between various components of the flash memory management system.
+
+This architecture overview provides a clear understanding of how the flash memory management software is structured and operates within the context of the Raspberry Pi Pico environment. It serves as a guide for developers looking to extend or integrate this functionality into their projects.
 
 
 ## Function Details: `flash_write_safe`
@@ -324,3 +468,128 @@ This table should be useful for developers and system architects in understandin
 
 
 <img src="images/erase.png" alt="Image Alt Text" width="600" height="600">
+
+
+
+
+
+## Structured Data Management
+
+In managing flash memory operations, particularly for functions such as `flash_write_safe`, `flash_read_safe`, and `flash_erase_safe`, the `flash_data` struct plays a crucial role. Below is a breakdown of each component of this struct and what it represents:
+
+### `flash_data` Structure Definition
+
+```c
+typedef struct {
+    bool valid;             // Indicates if the data is considered valid.
+    uint32_t write_count;   // Tracks the number of times the data has been written to ensure wear leveling.
+    size_t data_len;        // Specifies the length of the data in bytes.
+    uint8_t *data_ptr;      // Points to the actual data stored in flash.
+} flash_data;
+```
+
+## Field Descriptions
+
+- **valid**:
+  - *Type*: bool
+  - *Description*: This flag indicates whether the data stored in the flash memory is valid and can be trusted. It is used to verify data integrity during read operations and to manage data validity during erases and writes.
+
+- **write_count**:
+  - *Type*: uint32_t
+  - *Description*: Maintains a count of how many times the data has been written to the flash. This information is essential for implementing wear leveling strategies, which help extend the lifespan of the flash memory by distributing write and erase cycles across different sectors.
+
+- **data_len**:
+  - *Type*: size_t
+  - *Description*: Specifies the length of the data stored in bytes. This length is critical for ensuring that read and write operations handle the correct amount of data, preventing buffer overflows and ensuring data integrity.
+
+- **data_ptr**:
+  - *Type*: uint8_t *
+  - *Description*: Points to the actual data stored within the flash memory. This pointer is used during read and write operations to directly access the data stored in flash.
+
+## Importance of Structured Data Management
+
+Properly managing the data structure and ensuring each field is accurately maintained and utilized is vital for the stability and reliability of flash memory operations. The `flash_data` struct not only facilitates precise control over data operations but also enhances data integrity, wear leveling, and efficient memory usage. By understanding and utilizing this struct effectively, developers can ensure that their applications perform optimally with respect to non-volatile storage requirements.
+
+
+## Structured Data Management: `DeviceConfig`
+
+The `DeviceConfig` struct is designed to encapsulate configuration details of a device, making it easier to manage and access various attributes related to a specific hardware device or sensor within the system. Below is the definition and description of each field within this struct:
+
+### `DeviceConfig` Structure Definition
+
+```c
+typedef struct {
+    uint32_t id;          // Unique identifier for the device.
+    float sensor_value;   // Current value read from the device's sensor.
+    char name[10];        // A descriptive name for the device.
+} DeviceConfig;
+
+```
+## Field Descriptions for `DeviceConfig`
+
+## Field Descriptions for `DeviceConfig`
+
+- **`id`**:
+  - **Type**: `uint32_t`
+  - **Description**: This field stores a unique identifier for the device. It is crucial for distinguishing between different devices, especially in systems where multiple devices of the same type are managed concurrently.
+
+- **`sensor_value`**:
+  - **Type**: `float`
+  - **Description**: Holds the latest reading from the device’s sensor. This could represent any measurable parameter depending on the device's functionality, such as temperature, pressure, or humidity.
+
+- **`name`**:
+  - **Type**: `char[10]`
+  - **Description**: Provides a short, human-readable name or label for the device. This is particularly useful in user interfaces or logs where device identification is needed for better readability and management.
+
+## Importance of Structured Data Management in Device Configuration
+
+Managing data using structured formats like the `DeviceConfig` struct simplifies the process of data handling by:
+
+- **Centralizing device information**: All relevant details about a device are stored in a single, accessible location.
+- **Facilitating data transmission**: Easy to serialize and send over networks or store in databases.
+- **Enhancing maintenance and scalability**: Simplifies the process of updating, debugging, and scaling the management of multiple devices within the system.
+
+Structured data management using structures like `DeviceConfig` helps in maintaining clarity, ensuring data integrity, and improving the efficiency of operations involving device configurations.
+
+
+
+## Testing Coverage for Flash Memory Operations
+
+| Test Function                      | Description                                                         | Implemented |
+|------------------------------------|---------------------------------------------------------------------|:-----------:|
+| `test_unaligned_offset`            | Verifies handling of unaligned memory offsets.                      | ✔️           |
+| `test_flash_beyond_flash_limits`   | Checks the system's response to operations beyond flash boundaries. | ✔️           |
+| `test_null_or_zero_data`           | Tests responses to null data pointers and zero data length.         | ✔️           |
+| `test_exceed_sector_size`          | Ensures data sizes exceeding sector limits are handled correctly.   | ✔️           |
+| `test_save_and_recover_struct`     | Validates serialization, storage, and recovery of structured data.  | ✔️           |
+| `test_full_cycle_operation`        | Tests a complete cycle of write, read, and erase operations.        | ✔️           |
+| `test_flash_write_count_persistence` | Examines if write counts are properly maintained through cycles.   | ✔️           |
+| `test_data_length_retrieval`       | Checks accuracy of data length metadata before and after operations. | ✔️           |
+
+### Detailed Testing Descriptions
+
+1. **Unaligned Offset Handling**:
+   - Ensures that operations do not proceed or corrupt data when the offset is not sector-aligned.
+
+2. **Boundary Condition Testing**:
+   - Confirms that attempts to perform flash operations beyond the physical memory limits are handled without corrupting data.
+
+3. **Null and Zero-Length Data**:
+   - Validates that the system properly rejects write operations when provided with null pointers or zero-length data to avoid crashes.
+
+4. **Exceeding Sector Size**:
+   - Ensures that the system correctly handles attempts to write data blocks larger than the flash sector size minus the space required for metadata.
+
+5. **Structured Data Handling**:
+   - Tests the complete process of saving and recovering a device configuration, focusing on serialization and deserialization integrity.
+
+6. **Full Operation Cycle**:
+   - Confirms the integrity and reliability of the flash operations by ensuring that data can be written, read accurately, and then erased without residual data.
+
+7. **Write Count Persistence**:
+   - Ensures that the write count metadata is accurately maintained through multiple write and erase cycles, supporting wear leveling strategies.
+
+8. **Data Length Metadata Accuracy**:
+   - Validates that the system correctly updates and resets data length metadata associated with flash memory operations.
+
+This structured approach to testing ensures that all aspects of flash memory management are thoroughly vetted, maintaining high reliability and stability of the embedded system.
