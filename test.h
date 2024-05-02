@@ -41,7 +41,8 @@ void test_data_length_retrieval();
 // Test function for handling scenarios where no data or zero-length data is provided to write functions.
 void test_null_or_zero_data();
 
-
+// Test function for verifying the complete process of serializing, writing, 
+//reading, and recovering a structured configuration from flash memory.
 void test_save_and_recover_struct();
 
 #endif // TEST_H

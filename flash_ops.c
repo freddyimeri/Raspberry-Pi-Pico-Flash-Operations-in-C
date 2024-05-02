@@ -33,7 +33,7 @@
 #define METADATA_SIZE sizeof(flash_data)  
 
 /**
- * Write data safely to the flash memory at a specified offset ensuring that all parameters and alignment rules
+ * Write data safely to the flash memory at a specified offset, ensuring that all parameters and alignment rules
  * are strictly adhered to in order to prevent data corruption and adhere to device specifications.
  * 
  * @param offset The offset from the base where data starts to be written in the flash memory.
@@ -41,78 +41,76 @@
  * @param data_len The length of the data to be written in bytes.
  */
 void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len) {
-    
     // Calculate the actual flash memory address by adding the target offset to the base address.
     uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
+    // Print the computed flash memory address for debugging purposes.
     printf("flash_offset: %d\n", flash_offset);
 
-    // Ensure the data pointer is not NULL and the data length is greater than zero.
+    // Check if data is NULL or if the length is zero, which are invalid inputs.
     if (data == NULL || data_len == 0) {
         printf("Error: No data provided or data length is zero.\n");
-        return;  // Exit if data is invalid, preventing further operations.
+        return;  // Exit the function to prevent further operations with invalid data.
     }
 
-    // Check if the provided offset aligns with the flash sector size to prevent cross-sector issues.
+    // Ensure the flash offset is a multiple of the flash sector size to avoid cross-sector write issues.
     if (flash_offset % FLASH_SECTOR_SIZE != 0) {
         printf("Error: Invalid offset for write. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
-        return;
+        return;  // Early return if the offset is not aligned.
     }
 
-    // Verify that the data length does not exceed the limits of a single sector minus the space needed for metadata.
+    // Check if the data size exceeds the sector capacity after accounting for metadata.
     if (data_len > (FLASH_SECTOR_SIZE - METADATA_SIZE)) {
         printf("Error: Data size exceeds the maximum allowed limit per sector (%u bytes allowed).\n", FLASH_SECTOR_SIZE - METADATA_SIZE);
-        return;
+        return;  // Return if the data size is too large for one sector.
     }
 
-    // Check to ensure that the write operation does not go beyond the physical memory limits of the flash.
+    // Prevent writing beyond the physical memory limits of the flash.
     if (flash_offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
         printf("Error: Attempt to write beyond flash memory limits.\n");
-        return;
+        return;  // Return if the write operation would exceed the flash memory boundaries.
     }
 
-
+    // Retrieve the current write count for the specified offset, then increment it by one.
     uint32_t initial_count = get_flash_write_count(offset);
-    initial_count = initial_count + 1;
+    initial_count++;
 
+    // Prepare the flash data structure with new write count and data information.
     flash_data flashData = {
-        .valid = true,
-        .write_count = initial_count,
-        .data_len = data_len,
-        .data_ptr = data
+        .valid = true,         // Mark the data as valid.
+        .write_count = initial_count, // Updated write count.
+        .data_len = data_len,  // Set the length of the data.
+        .data_ptr = data       // Point to the data to be written.
     };
 
-    
+    // Calculate the total size required for storing the data and metadata.
+    size_t total_size = sizeof(flash_data) + flashData.data_len;
 
-    size_t total_size = sizeof(flash_data) + flashData.data_len;  // Calculate total required size
-
-
+    // Allocate memory for the buffer that will hold both the metadata and the actual data.
     uint8_t *flash_data_buffer = malloc(total_size);
-
-
     if (!flash_data_buffer) {
         printf("Failed to allocate memory for flash data buffer.\n");
-        return;
+        return;  // Return if memory allocation fails.
     }
+
+    // Serialize the flashData structure into the allocated buffer.
     serialize_flash_data(&flashData, flash_data_buffer, total_size);
 
-
-    // Save the current state of interrupts and disable them to prevent interference 
-    // during the flash write operation, ensuring atomicity of the write process.
+    // Disable interrupts to ensure the flash write operation is not interrupted, maintaining atomicity.
     uint32_t ints = save_and_disable_interrupts();
 
-
-    // Erase the flash sector at the specified offset to prepare it for a clean write.
-    // This is necessary because flash memory must be erased before new data can be programmed.
+    // Erase the flash sector before writing new data to ensure it's clean for programming.
     flash_range_erase(offset, FLASH_SECTOR_SIZE);
 
-    // Write the new structured data to flash, including metadata such as write count,
-    // ensuring all information is stored accurately.
+    // Program the flash memory with new data and metadata.
     flash_range_program(offset, flash_data_buffer, total_size);
 
-    // Restore the interrupts to their previous state after the write operation is complete,
-    // ensuring the system's interrupt configuration is maintained correctly.
+    // Restore interrupts to their original state once the flash operation is complete.
     restore_interrupts(ints);
+
+    // Free the allocated buffer after the write operation is done.
+    free(flash_data_buffer);
 }
+
 
 
 
@@ -130,42 +128,55 @@ void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len) {
  * @param buffer_len The length of the buffer to ensure no overflow occurs.
  */
 void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len) {
-    
     // Calculate the actual memory address in flash by adding the base offset.
     uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
-  
+    // Display calculated flash offset for verification and debugging purposes.
+    printf("Calculated flash offset: %d\n", flash_offset);
 
-    // Ensure the offset is aligned with the flash sector size to prevent partial sector read issues.
+    // Check if the flash offset is properly aligned with the sector size to avoid misaligned reads.
     if (flash_offset % FLASH_SECTOR_SIZE != 0) {
         printf("Error: Invalid offset for read. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
-        return;
+        return; // Exit function if offset is not aligned.
     }
 
-    // Verify the requested read does not exceed the flash memory's bounds.
+    // Ensure the read operation does not extend beyond the flash memory's bounds.
     if (flash_offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
         printf("Error: Attempt to read beyond flash memory limits.\n");
-        return;
+        return; // Exit function if attempting to read beyond available flash memory.
     }
 
-    const size_t total_size = sizeof(flash_data) + buffer_len;  // Calculate total required size
+    // Calculate the total size needed to read, including both metadata and the user data.
+    const size_t total_size = sizeof(flash_data) + buffer_len;
 
+    // Allocate a buffer to hold the flash data including the metadata.
     uint8_t *flash_data_buffer = malloc(total_size);
-
     if (flash_data_buffer == NULL) {
         printf("Failed to allocate memory for flash data buffer.\n");
-        return;
+        return; // Exit if memory allocation fails.
     }
 
+    // Copy the data from flash memory starting at the computed offset into the allocated buffer.
     memcpy(flash_data_buffer, (const void *)(XIP_BASE + offset), total_size);
 
-
+    // Deserialize the buffer into a flash_data struct to extract metadata and actual data.
     flash_data data;
     deserialize_flash_data(flash_data_buffer, &data);
 
+    // Check if the data is valid before copying it to the user-provided buffer.
+    if (data.valid) {
+        // Ensure that the buffer is large enough to hold the data.
+        if (buffer_len >= data.data_len) {
+            // Copy only the amount of data specified in data_len to prevent buffer overflow.
+            memcpy(buffer, data.data_ptr, data.data_len);
+        } else {
+            printf("Error: Buffer provided is too small for the data length.\n");
+        }
+    } else {
+        printf("Error: Invalid data at specified flash offset.\n");
+    }
 
-    memcpy(buffer, data.data_ptr, buffer_len);
-
-
+    // Free the allocated buffer after use.
+    free(flash_data_buffer);
 }
 
 
@@ -181,59 +192,58 @@ void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len) {
  * @param offset The offset within the flash memory where the sector begins to be erased.
  */
 void flash_erase_safe(uint32_t offset) {
-
+    // Calculate the actual address in flash memory where the erasing will start, including the predefined offset.
     uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
-    
 
-    // Check if the offset is aligned with the flash sector size to ensure that entire
-    // sectors are erased, which is a requirement for most flash memory devices.
+    // Ensure the offset aligns with the sector size to prevent partial erasure of sectors.
     if (flash_offset % FLASH_SECTOR_SIZE != 0) {
         printf("Error: Invalid offset for erase. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
-        return; // Prevent erasing if the offset is not properly aligned.
+        return; // Exit if the offset is misaligned, as erasing misaligned sectors can lead to data corruption.
     }
 
-    // Verify that the erasing operation does not extend beyond the available flash memory space.
+    // Check if the erasing would go beyond the limits of the flash memory.
     if (flash_offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
         printf("Error: Attempt to erase beyond flash memory limits.\n");
-        return; // Stop operation to avoid memory corruption.
+        return; // Stop the operation to prevent memory corruption due to out-of-bounds access.
     }
 
+    // Retrieve the current write count for the sector to be erased and increment it to track erase cycles.
     uint32_t initial_count = get_flash_write_count(offset);
-    initial_count = initial_count + 1;
-    
-    
-    uint32_t ints = save_and_disable_interrupts(); // Disable interrupts to ensure the operation's atomicity.
+    initial_count += 1;
 
-    // Calculate the actual start of the sector to ensure the entire sector is correctly erased.
+    // Disable interrupts to ensure the erasure process is not interrupted, maintaining the atomicity of the operation.
+    uint32_t ints = save_and_disable_interrupts();
+
+    // Compute the exact start of the sector to be erased, ensuring it is rounded down to the nearest sector boundary.
     uint32_t sector_start = flash_offset & ~(FLASH_SECTOR_SIZE - 1);
 
-    // Check if the computed sector start is beyond the flash memory's boundary.
+    // Verify that the calculated sector start does not exceed the flash memory's boundary.
     if (sector_start >= FLASH_TARGET_OFFSET + FLASH_SIZE) {
         printf("Error: Sector start address is out of bounds.\n");
         restore_interrupts(ints);
-        return; // Restore interrupts and exit if the sector start is invalid.
+        return; // Restore interrupts and abort if the start address is invalid.
     }
 
-    // Backup existing metadata before erasing to preserve essential data like write counts.
+    // Back up the existing metadata from the sector before erasing to preserve critical data like write counts.
     flash_data metadata_backup;
     memcpy(&metadata_backup, (const void*)(XIP_BASE + sector_start), sizeof(flash_data));
 
-    // Perform the erase operation on the calculated sector.
+    // Perform the actual erasure of the sector.
     flash_range_erase(sector_start, FLASH_SECTOR_SIZE);
 
-    // Prepare metadata to be restored after erasing.
+    // Set up metadata for restoration after erasing. Mark data as invalid since it has been erased.
     flash_data metadata_to_restore = {
-        .valid = false,  // Mark as invalid since data is erased.
-        .write_count = initial_count,  // Preserve the write count.
-        .data_len = 0,  // Reset data length to zero as data is no longer valid.
-        .data_ptr = NULL  // Clear data pointer.
+        .valid = false,
+        .write_count = initial_count, // Updated write count after erasure.
+        .data_len = 0,
+        .data_ptr = NULL
     };
 
-
-    // Restore the metadata to flash after erasing the sector.
+    // Restore the metadata at the start of the erased sector to maintain the integrity of flash management data.
     flash_range_program(sector_start, (const uint8_t *)&metadata_to_restore, sizeof(flash_data));
 
-    restore_interrupts(ints); // Re-enable interrupts after the operation is complete.
+    // Re-enable interrupts after completing the erasure to restore normal operation.
+    restore_interrupts(ints);
 }
 
 

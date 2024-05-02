@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "test.h"
-
-#include "flash_ops.h"
-
 #include <stdlib.h>
 #include <string.h>
 

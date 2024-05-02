@@ -1,5 +1,5 @@
 /**
- * @file flash_ops.h
+ * @file flash_ops_helper.h
  * 
  * Header file defining operations for safe and reliable manipulation of flash memory on the Raspberry Pi Pico.
  * This file includes functions for reading, writing, and erasing data in flash memory while ensuring data integrity

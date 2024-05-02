@@ -33,7 +33,7 @@ void execute_command(char *command) {
         data_to_write.data_len = strlen(token); // Set the data length
 
         // Call the modified write function
-        flash_write_safe_struct(address, &data_to_write);
+        //flash_write_safe_struct(address, &data_to_write);
     }
     else if (strcmp(token, "FLASH_READ") == 0) {
         token = strtok(NULL, " ");
@@ -48,7 +48,7 @@ void execute_command(char *command) {
         memset(&data_read, 0, sizeof(data_read)); // Clear the structure
 
         // Call the modified read function
-        flash_read_safe_struct(address, &data_read);
+        //flash_read_safe_struct(address, &data_read);
 
 
         // Displaying the metadata

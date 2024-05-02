@@ -43,14 +43,6 @@ void run_all_tests() {
     test_unaligned_offset();
     printf("%s\n", slashes);
 
-    // Test the persistence of the write count through write and erase cycles.
-    test_flash_write_count_persistence();
-    printf("%s\n", slashes);
-
-    // Test the accuracy of data length retrieval from flash memory.
-    test_data_length_retrieval();  // New test declaration
-    printf("%s\n", slashes);
-
     // Test handling of operations beyond the flash memory's limits.
     test_flash_beyond_flash_limits();
     printf("%s\n", slashes);
@@ -63,12 +55,21 @@ void run_all_tests() {
     test_exceed_sector_size();  
     printf("%s\n", slashes);
 
+    // Run the test for saving and recovering a structured device configuration from flash memory.
+    test_save_and_recover_struct();
+    printf("%s\n", slashes);
+
     // Test a complete cycle of write, read, and erase operations.
     test_full_cycle_operation();
     printf("%s\n", slashes);
+   
 
+    // Test the persistence of the write count through write and erase cycles.
+    test_flash_write_count_persistence();
+    printf("%s\n", slashes);
 
-    test_save_and_recover_struct();
+    // Test the accuracy of data length retrieval from flash memory.
+    test_data_length_retrieval();  // New test declaration
     printf("%s\n", slashes);
 }
 
@@ -238,8 +239,11 @@ void test_exceed_sector_size() {
  */
 void test_unaligned_offset() {
     printf("Testing functions with unaligned offset...\n");
+
+    printf("It should print Error, should not be able to access the function\n");
     // Choose an offset that is intentionally not aligned with the 4096-byte sector size.
     uint32_t offset = 6096;  // This offset should cause alignment errors.
+    printf("Using offset: %d\n", offset);
 
     // Prepare a data buffer with a distinctive pattern to track in memory.
     uint8_t data[100];  // Example data buffer to attempt to write
@@ -287,7 +291,7 @@ void test_full_cycle_operation() {
     memset(write_data, 0xA5, sizeof(write_data));  // Fill the data array with a specific pattern to trace it easily.
 
     // Write data to flash at the defined offset.
-    flash_write_safe(offset, write_data, sizeof(write_data));
+    flash_write_safe(offset,(const uint8_t*) write_data, sizeof(write_data));
     
     // Prepare a buffer to read the data back into, ensuring it is initially cleared.
     uint8_t read_data[sizeof(write_data)];
@@ -339,32 +343,57 @@ void test_null_or_zero_data() {
 
 
  
+/**
+ * Tests the complete process of saving a device configuration to flash memory and then recovering it.
+ * This test validates the serialization, writing to flash, reading from flash, and deserialization
+ * processes to ensure that structured data is handled correctly throughout the lifecycle.
+ */
 void test_save_and_recover_struct() {
-    uint32_t offset = 61440;   
+    // Define a memory offset within the flash that is aligned and suitable for this test.
+    uint32_t offset = 61440;  // Use a specific offset to avoid overwriting other important data.
 
-
+    // Initialize a DeviceConfig structure with test data.
     DeviceConfig config = {
         .id = 5123,
-        .sensor_value = 98.6,
+        .sensor_value = 99,
         .name = "Device1"
     };
-    
+
+    printf("Preparing to serialize and write DeviceConfig to flash...\n");
+
     // Serialize DeviceConfig into a buffer
     uint8_t device_config_buffer[sizeof(DeviceConfig)];
     serialize_device_config(&config, device_config_buffer);
+
+    printf("Writing DeviceConfig to flash at offset %u...\n", offset);
+    // Write the serialized data to the flash memory at the specified offset.
     flash_write_safe(offset, device_config_buffer, sizeof(device_config_buffer));
-    const size_t total_size =  sizeof(DeviceConfig);
+
+    printf("Reading back DeviceConfig from flash...\n");
+    // Allocate a buffer to read back the serialized data from flash.
     uint8_t device_config_buffer_read[sizeof(DeviceConfig)];
-    flash_read_safe(offset, device_config_buffer_read, total_size);
-    DeviceConfig config11;
+    // Read the data from flash memory into the buffer.
+    flash_read_safe(offset, device_config_buffer_read, sizeof(DeviceConfig));
 
-    deserialize_device_config(device_config_buffer_read, &config11);
+    printf("Deserializing data read from flash...\n");
+    // Deserialize the read buffer back into a DeviceConfig structure.
+    DeviceConfig recovered_config;
+    deserialize_device_config(device_config_buffer_read, &recovered_config);
 
-    printf("device ID: %d\n", config11.id);
-    printf("device sensor value: %f\n", config11.sensor_value);
-    printf("device name: %s\n", config11.name);
+    // Output the results to verify correctness.
+    printf("Recovered DeviceConfig details:\n");
+    printf("Device ID: %d\n", recovered_config.id);
+    printf("Device Sensor Value: %f\n", recovered_config.sensor_value);
+    printf("Device Name: %s\n", recovered_config.name);
 
-
-
+    // Optionally, compare the original and recovered configurations to verify integrity.
+    if (config.id == recovered_config.id &&
+        config.sensor_value == recovered_config.sensor_value &&
+        strcmp(config.name, recovered_config.name) == 0) {
+        printf("PASS: Device configuration recovered successfully and matches the original.\n");
+    } else {
+        printf("FAIL: Device configuration recovered does not match the original.\n");
+    }
 }
+
  
