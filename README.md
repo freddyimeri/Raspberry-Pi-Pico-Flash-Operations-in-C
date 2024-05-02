@@ -1,3 +1,8 @@
+<h1>Worksheet 1 Part 1</h1>
+
+<h2>Communication and Protocols </2>
+
+
 # Table of Contents
 
 1. [Introduction](#introduction)
@@ -43,11 +48,11 @@
 
 # Introduction
 
-This section provides an overview of the project, outlining its purpose, scope, and the functionalities it offers. It sets the stage for understanding how the provided code interacts with the Raspberry Pi Pico's flash memory to perform critical operations securely and efficiently.
+This repository contains a collection of  functions designed to support operations on the flash memory of the Raspberry Pi Pico microcontroller. These functions extend the basic functionalities of interacting with the flash memory. Moreover this repo provides more specific and often complex operations that involve reading and writing structured data to and from the flash memory, as well as managing serialization and deserialization processes.
 
 ## Project Overview
 
-The project is centered around developing robust software for managing the flash memory on the Raspberry Pi Pico. Given the Pico's constraints and capabilities, the software is designed to handle flash memory operations that are crucial for maintaining data integrity, especially in applications requiring non-volatile storage solutions. The software ensures that all read, write, and erase operations on the flash are performed safely, adhering to best practices in embedded systems programming.
+The project is centered around developing  software for managing the flash memory on the Raspberry Pi Pico. Given the Pico's constraints and capabilities, the software is designed to handle flash memory operations that are crucial for maintaining data integrity, especially in applications requiring non-volatile storage solutions. The software ensures that all read, write, and erase operations on the flash are performed safely, adhering to best practices in embedded systems programming.
 
 Key aspects include:
 - Ensuring alignment with flash memory sector boundaries to avoid partial writes or erases.
@@ -173,8 +178,12 @@ Memory management within this project is crucial for ensuring efficient use of t
 
 ### Architectural Diagram
 
-- **Flowcharts**: Visual diagrams that illustrate the flow of data and control across the system during flash memory operations.
-- **UML Diagrams**: Use of Unified Modeling Language diagrams to detail the interaction between various components of the flash memory management system.
+- 
+
+<img src="images/architecture_diagram2.png" alt="Image Alt Text" width="800" height="800">
+
+
+
 
 This architecture overview provides a clear understanding of how the flash memory management software is structured and operates within the context of the Raspberry Pi Pico environment. It serves as a guide for developers looking to extend or integrate this functionality into their projects.
 
@@ -214,6 +223,10 @@ void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len);
 - **Data Integrity**: Ensures that each write operation is performed correctly without corrupting other data, crucial for systems where data reliability is key.
 - **System Stability**: By enforcing boundary and alignment checks, the function prevents system crashes and data corruption scenarios that could arise from improper flash memory operations.
 - **Performance Considerations**: While ensuring safety, the function is also designed to be as efficient as possible under the constraints of operating directly with hardware.
+
+### Diagram
+
+<img src="images/Flash_write_safe.png" alt="Image Alt Text" width="600" height="600">
 
 ### Example Usage
 
@@ -273,7 +286,7 @@ This passage gives a concluding overview of the significance of the `flash_write
 
 
 
-<img src="images/Flash_write_safe.png" alt="Image Alt Text" width="600" height="600">
+
 
 
 
@@ -327,6 +340,10 @@ Handles several error scenarios gracefully, providing clear error messages for:
 - **Insufficient buffer size provided by the caller**.
 - **Encountering invalid data at the specified offset**.
 
+## Diagram
+
+<img src="images/read_safe1.png" alt="Image Alt Text" width="600" height="600">
+
 ## Example Usage
 
 Here's how you might use `flash_read_safe` in an application:
@@ -371,7 +388,6 @@ This table aims to provide a comprehensive overview of what the `flash_read_safe
 
 
 
-<img src="images/read_safe1.png" alt="Image Alt Text" width="600" height="600">
 
 
 
@@ -417,6 +433,11 @@ void flash_erase_safe(uint32_t offset);
 
 - **Restore Operation State**:
   - Re-enables interrupts after completing the erase to return the system to its normal operational state.
+
+
+## Diagram 
+
+<img src="images/erase.png" alt="Image Alt Text" width="800" height="800">
 
 ## Error Handling
 
@@ -467,7 +488,7 @@ This table should be useful for developers and system architects in understandin
 
 
 
-<img src="images/erase.png" alt="Image Alt Text" width="600" height="600">
+
 
 
 
@@ -505,6 +526,11 @@ typedef struct {
 - **data_ptr**:
   - *Type*: uint8_t *
   - *Description*: Points to the actual data stored within the flash memory. This pointer is used during read and write operations to directly access the data stored in flash.
+
+
+## Diagram 
+
+<img src="images/architecture_diagram.png" alt="Image Alt Text" width="600" height="600">
 
 ## Importance of Structured Data Management
 
