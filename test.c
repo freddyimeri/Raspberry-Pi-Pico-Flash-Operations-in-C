@@ -12,7 +12,7 @@
  * operations implemented in flash_ops.h, providing a comprehensive evaluation of each
  * function's behavior under normal and extreme conditions.
  */
-
+#include "flash_ops_helper.h"
 #include "test.h"
 #include "flash_ops.h"
 #include <stdio.h>
@@ -65,6 +65,10 @@ void run_all_tests() {
 
     // Test a complete cycle of write, read, and erase operations.
     test_full_cycle_operation();
+    printf("%s\n", slashes);
+
+
+    test_save_and_recover_struct();
     printf("%s\n", slashes);
 }
 
@@ -191,9 +195,7 @@ void test_flash_beyond_flash_limits() {
     // This function should also return zero or an appropriate error message if boundaries are respected.
     uint32_t retrieved_length = get_flash_data_length(offset);
 
-    // Note: The all functions should automatically 
-    // print errors due to exceeding memory limits, which
-    // would validate the boundary checks implemented within them.
+    
 }
 
 
@@ -334,4 +336,35 @@ void test_null_or_zero_data() {
 
 
 
+
+
+ 
+void test_save_and_recover_struct() {
+    uint32_t offset = 61440;   
+
+
+    DeviceConfig config = {
+        .id = 5123,
+        .sensor_value = 98.6,
+        .name = "Device1"
+    };
+    
+    // Serialize DeviceConfig into a buffer
+    uint8_t device_config_buffer[sizeof(DeviceConfig)];
+    serialize_device_config(&config, device_config_buffer);
+    flash_write_safe(offset, device_config_buffer, sizeof(device_config_buffer));
+    const size_t total_size =  sizeof(DeviceConfig);
+    uint8_t device_config_buffer_read[sizeof(DeviceConfig)];
+    flash_read_safe(offset, device_config_buffer_read, total_size);
+    DeviceConfig config11;
+
+    deserialize_device_config(device_config_buffer_read, &config11);
+
+    printf("device ID: %d\n", config11.id);
+    printf("device sensor value: %f\n", config11.sensor_value);
+    printf("device name: %s\n", config11.name);
+
+
+
+}
  

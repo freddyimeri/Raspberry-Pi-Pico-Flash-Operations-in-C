@@ -15,11 +15,11 @@ int main() {
     while (!stdio_usb_connected()) {
         sleep_ms(100);
     }
-        printf("USB Connected.\n");
- printf("Running all tests...\n");
+    printf("USB Connected.\n");
+    printf("Running all tests...\n");
     run_all_tests();
 
-printf("buyeeeeeeee all tests...\n");
+    printf("buyeeeeeeee all tests...\n");
     return 0;
 }
 

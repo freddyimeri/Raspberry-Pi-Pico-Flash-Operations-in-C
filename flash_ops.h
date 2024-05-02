@@ -19,7 +19,7 @@ typedef struct {
     bool valid;              // Flag to indicate if the data is valid
     uint32_t write_count;    // Number of times the data has been written
     size_t data_len;         // Length of the data in bytes
-    const uint8_t *data_ptr; // Pointer to the actual data
+    uint8_t *data_ptr; // Pointer to the actual data
 } flash_data;
 
 // Functions for manipulating flash memory
@@ -31,8 +31,5 @@ void flash_erase_safe(uint32_t offset); // Erases a sector of flash memory safel
 void flash_write_safe_struct(uint32_t offset, flash_data *data); // Writes structured data to flash.
 void flash_read_safe_struct(uint32_t offset, flash_data *data); // Reads structured data from flash.
 
-// Utility functions to get additional information from flash memory.
-uint32_t get_flash_write_count(uint32_t offset); // Retrieves the write count for a specified offset.
-uint32_t get_flash_data_length(uint32_t offset); // Retrieves the length of data stored at a specified offset.
-
+ 
 #endif // FLASH_OPS_H

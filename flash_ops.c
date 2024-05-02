@@ -18,6 +18,7 @@
 
 
 #include "flash_ops.h"
+#include "flash_ops_helper.h"
 #include <stdio.h>
 #include <string.h>
  
@@ -27,7 +28,7 @@
 #include <stdlib.h>
  #include <stdbool.h>  // Include this header for bool type
 
-#define FLASH_TARGET_OFFSET (256 * 1024) // Offset where user data starts (256KB into flash)
+#define FLASH_TARGET_OFFSET (256 * 1024) // Offset where user data starts  
 #define FLASH_SIZE PICO_FLASH_SIZE_BYTES // Total flash size available
 #define METADATA_SIZE sizeof(flash_data)  
 
@@ -69,50 +70,36 @@ void flash_write_safe(uint32_t offset, const uint8_t *data, size_t data_len) {
         return;
     }
 
-    // Initialize flash data structure with the provided parameters.
-    flash_data flashData;
-    flashData.write_count = 0;  // Set initial write count to 0.
-    flashData.data_ptr = data;  // Set data pointer to the provided data.
-    flashData.data_len = data_len;  // Set data length to the provided length.
 
-    // Call the helper function to perform the actual structured write to flash.
-    flash_write_safe_struct(flash_offset, &flashData);
-}
+    uint32_t initial_count = get_flash_write_count(offset);
+    initial_count = initial_count + 1;
 
+    flash_data flashData = {
+        .valid = true,
+        .write_count = initial_count,
+        .data_len = data_len,
+        .data_ptr = data
+    };
 
-
-/**
- * Writes structured data to a specific offset in flash memory after handling data integrity and
- * management operations. This function ensures data consistency and manages the write count to
- * track flash memory wear.
- * 
- * @param offset   The offset in flash memory where the data is to be written.
- * @param new_data Pointer to the structured data containing the information to be written.
- */
-void flash_write_safe_struct(uint32_t offset, flash_data *new_data) {
     
+
+    size_t total_size = sizeof(flash_data) + flashData.data_len;  // Calculate total required size
+
+
+    uint8_t *flash_data_buffer = malloc(total_size);
+
+
+    if (!flash_data_buffer) {
+        printf("Failed to allocate memory for flash data buffer.\n");
+        return;
+    }
+    serialize_flash_data(&flashData, flash_data_buffer, total_size);
+
+
     // Save the current state of interrupts and disable them to prevent interference 
     // during the flash write operation, ensuring atomicity of the write process.
     uint32_t ints = save_and_disable_interrupts();
 
-    // Initialize a temporary structure to hold the data currently stored at the flash location.
-    flash_data current_data;
-    memset(&current_data, 0, METADATA_SIZE);
-
-    // Read the existing data at the specified flash offset into the temporary structure.
-    memcpy(&current_data, (const void *)(XIP_BASE + offset), METADATA_SIZE);
-  
-    // If no valid entry exists yet, initialize the write count to zero.
-    if(current_data.write_count == -1) {
-        current_data.write_count = 0;
-    }
-
-    // Increment the write count to reflect this new write operation, tracking how many
-    // times this particular flash location has been written to, which can help with wear leveling.
-    new_data->write_count = current_data.write_count + 1;
-
-    // Mark the new data as valid before writing it to flash.
-    new_data->valid = true;
 
     // Erase the flash sector at the specified offset to prepare it for a clean write.
     // This is necessary because flash memory must be erased before new data can be programmed.
@@ -120,12 +107,16 @@ void flash_write_safe_struct(uint32_t offset, flash_data *new_data) {
 
     // Write the new structured data to flash, including metadata such as write count,
     // ensuring all information is stored accurately.
-    flash_range_program(offset, (const uint8_t *)new_data, METADATA_SIZE);
+    flash_range_program(offset, flash_data_buffer, total_size);
 
     // Restore the interrupts to their previous state after the write operation is complete,
     // ensuring the system's interrupt configuration is maintained correctly.
     restore_interrupts(ints);
 }
+
+
+
+
 
 
 
@@ -142,7 +133,7 @@ void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len) {
     
     // Calculate the actual memory address in flash by adding the base offset.
     uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
-    printf("flash_offset: %d\n", flash_offset);
+  
 
     // Ensure the offset is aligned with the flash sector size to prevent partial sector read issues.
     if (flash_offset % FLASH_SECTOR_SIZE != 0) {
@@ -156,52 +147,29 @@ void flash_read_safe(uint32_t offset, uint8_t *buffer, size_t buffer_len) {
         return;
     }
 
-    // Structure to hold the data read from flash, initialized to zero.
-    flash_data flashData;
-    memset(&flashData, 0, sizeof(flashData));
+    const size_t total_size = sizeof(flash_data) + buffer_len;  // Calculate total required size
 
-    // Perform the structured read from flash.
-    flash_read_safe_struct(flash_offset, &flashData);
-    
-    // Check if the retrieved data is valid and initialized.
-    if (!flashData.valid || flashData.data_len == 0) {
-        printf("Error: Attempt to read invalid or uninitialized flash data.\n");
+    uint8_t *flash_data_buffer = malloc(total_size);
+
+    if (flash_data_buffer == NULL) {
+        printf("Failed to allocate memory for flash data buffer.\n");
         return;
     }
 
-    // Adjust buffer_len to be no larger than the actual data length to avoid overflows.
-    if (buffer_len > flashData.data_len) {
-        buffer_len = flashData.data_len;
-    }
-    
-    // Copy the data from the flash memory to the provided buffer.
-    // Note: data_ptr must be handled by a specific implementation as it cannot directly point to a meaningful location.
-    memcpy(buffer, flashData.data_ptr, buffer_len);
-    printf("Flash data is valid and read successfully.\n");
+    memcpy(flash_data_buffer, (const void *)(XIP_BASE + offset), total_size);
+
+
+    flash_data data;
+    deserialize_flash_data(flash_data_buffer, &data);
+
+
+    memcpy(buffer, data.data_ptr, buffer_len);
+
+
 }
 
 
 
-/**
- * Reads structured data from a specific offset within the flash memory. This function ensures
- * that the read operation does not exceed the memory bounds of the flash and transfers the
- * data into a provided structure.
- * 
- * @param offset The offset within the flash memory from which to read the data.
- * @param data   Pointer to a structure where the read flash data should be stored.
- */
-void flash_read_safe_struct(uint32_t offset, flash_data *data) {
-    // Ensure that the read operation does not go beyond the allocated flash memory.
-    // This checks if the end of the data that would be read is within the flash memory boundaries.
-    if (offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
-        printf("Error: Attempt to read beyond flash memory limits.\n");
-        return; // Exit the function if the memory access would be out of bounds.
-    }
-
-    // Execute the memory copy operation to transfer the data from flash to the provided data structure.
-    // XIP_BASE is the base address of the externally mapped flash memory, allowing direct memory access.
-    memcpy(data, (const void *)(XIP_BASE + offset), METADATA_SIZE);
-}
 
   
  
@@ -213,9 +181,9 @@ void flash_read_safe_struct(uint32_t offset, flash_data *data) {
  * @param offset The offset within the flash memory where the sector begins to be erased.
  */
 void flash_erase_safe(uint32_t offset) {
-    printf("offset: %d\n", offset);
+
     uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
-    printf("flash_offset: %d\n", flash_offset);
+    
 
     // Check if the offset is aligned with the flash sector size to ensure that entire
     // sectors are erased, which is a requirement for most flash memory devices.
@@ -230,7 +198,10 @@ void flash_erase_safe(uint32_t offset) {
         return; // Stop operation to avoid memory corruption.
     }
 
-    printf("flash_offset: %d\n", flash_offset);
+    uint32_t initial_count = get_flash_write_count(offset);
+    initial_count = initial_count + 1;
+    
+    
     uint32_t ints = save_and_disable_interrupts(); // Disable interrupts to ensure the operation's atomicity.
 
     // Calculate the actual start of the sector to ensure the entire sector is correctly erased.
@@ -253,12 +224,12 @@ void flash_erase_safe(uint32_t offset) {
     // Prepare metadata to be restored after erasing.
     flash_data metadata_to_restore = {
         .valid = false,  // Mark as invalid since data is erased.
-        .write_count = metadata_backup.write_count,  // Preserve the write count.
+        .write_count = initial_count,  // Preserve the write count.
         .data_len = 0,  // Reset data length to zero as data is no longer valid.
         .data_ptr = NULL  // Clear data pointer.
     };
 
-    printf("metadata_to_restore.valid: %d\n", metadata_to_restore.valid);
+
     // Restore the metadata to flash after erasing the sector.
     flash_range_program(sector_start, (const uint8_t *)&metadata_to_restore, sizeof(flash_data));
 
@@ -266,79 +237,3 @@ void flash_erase_safe(uint32_t offset) {
 }
 
 
-
-/**
- * Retrieves the write count for a specific sector in the flash memory. This function checks
- * that the given offset aligns with the flash sector size and is within the flash memory's
- * boundaries before accessing the flash data.
- *
- * @param offset The offset from the start of the flash memory for which to retrieve the write count.
- * @return The number of times the flash sector at the given offset has been written. Returns 0
- *         if there is an error due to misalignment or boundary overflow, or if the sector has not
- *         been written yet.
- */
-uint32_t get_flash_write_count(uint32_t offset) {
-    // Calculate the actual memory address within the flash memory where the write count is stored.
-    uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
-
-    // Ensure that the offset is aligned with the flash sector size to prevent reading from an incorrect sector.
-    if (flash_offset % FLASH_SECTOR_SIZE != 0) {
-        printf("Error: Invalid offset for getting the Write count. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
-        return 0; // Return 0 as an error indicator due to misalignment.
-    }
-
-    // Check to ensure that the read operation stays within the bounds of the flash memory to avoid overflow errors.
-    if (flash_offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
-        printf("Error: Attempt to read for write count beyond flash memory limits.\n");
-        return 0; // Return 0 as an error indicator due to attempting to read beyond the flash memory limits.
-    }
-
-    // Define a temporary structure to store the data read from flash memory.
-    flash_data tempFlashData;
-
-    // Read the metadata from the specified offset within the flash memory.
-    memcpy(&tempFlashData, (const void *)(XIP_BASE + flash_offset), METADATA_SIZE);
-
-    // Return the retrieved write count. This count helps in understanding the wear level of the flash sector.
-    return tempFlashData.write_count;
-}
-
-
-
-/**
- * Retrieves the data length for a specific sector in the flash memory. This function ensures
- * that the read operation respects alignment with the flash sector size and stays within the
- * memory boundaries, crucial for accurate data retrieval and system stability.
- *
- * @param offset The offset from the start of the flash memory from which to retrieve the data length.
- * @return The length of the data stored at the given offset, in bytes. Returns 0 if there is an
- *         error due to misalignment, boundary issues, or if the sector has not been initialized.
- */
-uint32_t get_flash_data_length(uint32_t offset) {
-    // Calculate the actual memory address in flash memory.
-    uint32_t flash_offset = FLASH_TARGET_OFFSET + offset;
-
-    // Ensure the offset is aligned with the flash sector size to avoid reading incomplete or incorrect data.
-    if (flash_offset % FLASH_SECTOR_SIZE != 0) {
-        printf("Error: Invalid offset for getting data length. Please use a multiple of %d (sector size).\n", FLASH_SECTOR_SIZE);
-        return 0; // Return 0 to indicate an error due to misalignment.
-    }
-
-    // Check that the memory address for reading is within the allowed flash memory bounds.
-    if (flash_offset + METADATA_SIZE > FLASH_TARGET_OFFSET + FLASH_SIZE) {
-        printf("Error: Attempt to read for data length beyond flash memory limits.\n");
-        return 0; // Return 0 to indicate an error due to reading beyond flash memory limits.
-    }
-
-    // Define a temporary structure to hold the flash data read from memory.
-    flash_data tempFlashData;
-
-    // Read the data from the specified flash memory offset.
-    memcpy(&tempFlashData, (const void *)(XIP_BASE + flash_offset), METADATA_SIZE);
-
-    // Output the data length for debugging and verification purposes.
-    printf("FLASH DATA LENGTH: %zu\n", tempFlashData.data_len);
-
-    // Return the data length retrieved from the flash memory.
-    return tempFlashData.data_len;
-}

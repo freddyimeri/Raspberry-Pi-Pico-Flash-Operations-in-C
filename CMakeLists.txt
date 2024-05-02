@@ -13,6 +13,7 @@ add_executable(cap_template
   main.c
   custom_fgets.c
   flash_ops.c
+  flash_ops_helper.c
   cli.c
   test.c
 )

@@ -41,4 +41,7 @@ void test_data_length_retrieval();
 // Test function for handling scenarios where no data or zero-length data is provided to write functions.
 void test_null_or_zero_data();
 
+
+void test_save_and_recover_struct();
+
 #endif // TEST_H
